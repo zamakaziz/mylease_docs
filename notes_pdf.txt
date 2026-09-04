@@ -1,0 +1,1071 @@
+MyLeaseAudit Notes & Discussions Enhancement
+Recommendation for UI/UX Designers and Developers
+1. Executive Summary
+MyLeaseAudit already has a Notes concept, but the needed functionality is broader than simple
+note-taking. The recommended solution is to enhance Notes into contextual Notes &
+Discussions.
+This should not be a Slack-style chat system and should not be a separate chat module. Instead,
+discussions should be attached directly to the audit item being discussed.
+Recommended name:
+Notes & Discussions
+Purpose:
+Allow users to ask questions, comment, tag specific users, receive notifications, attach support,
+record decisions, and resolve discussions directly within the audit context.
+
+2. Product Principle
+The discussion should stay attached to the work item.
+Users should be able to discuss:
+Audit
+Document
+Validation Finding
+Finding / Observation
+Checklist Item
+Approval Request
+Savings Record
+Generated Report
+without leaving the current screen.
+
+3. Problem Being Solved
+Current-style notes are usually passive.
+They answer:
+What did someone write down?
+
+MyLeaseAudit Notes & Discussions Enhancement
+The enhanced Notes & Discussions feature should answer:
+Who asked the question?
+Who was asked?
+Who responded?
+What was decided?
+Was the issue resolved?
+Where is the discussion attached?
+Was the notified user alerted?
+
+4. Recommended UX Approach
+4.1 Do Not Build Full Slack
+Do not build:
+Channels
+Open chat rooms
+Team-wide feeds
+General chat
+Real-time social chat
+That would create unnecessary complexity.
+4.2 Build Contextual Discussion Threads
+Build:
+Object-level discussion threads
+Threaded replies
+@mentions
+Email notifications
+In-app notifications
+Attachments
+Open / Resolved status
+Activity logging
+Search
+
+MyLeaseAudit Notes & Discussions Enhancement
+
+5. Supported Parent Objects
+Each of these should support Notes & Discussions:
+Parent Object
+
+Discussion Support
+
+Audit header / audit file
+
+Yes
+
+Document
+
+Yes
+
+Validation Finding
+
+Yes
+
+Finding / Observation
+
+Yes
+
+Checklist Item
+
+Yes
+
+Approval Request
+
+Yes
+
+Savings Record
+
+Yes
+
+Generated Report / Output Yes
+Each thread must store:
+parent_object_type
+parent_object_id
+audit_id
+audit_year_id, where applicable
+
+6. UI Placement
+Every supported record should show a discussion indicator.
+Example:
+OBS-17 Management Fee Overcharge
+
+[Discussion 8]
+or:
+8
+Where the number equals total messages in the thread.
+
+MyLeaseAudit Notes & Discussions Enhancement
+If there are unresolved questions, show a visible status indicator:
+Discussion 8 — Open
+
+7. Main UI Pattern
+Use a right-side discussion drawer.
+Reason:
+Keeps the user in context
+Avoids navigation away from the audit record
+Works across Validation, Observations, Checklist, Approvals, Savings, and Documents
+
+8. UI Image
+The wireframe image shows the recommended pattern:
+•
+
+Main audit workspace on the left.
+
+•
+
+Selected finding with Discussion button.
+
+•
+
+Right-side Notes & Discussions drawer.
+
+•
+
+Typed message composer.
+
+•
+
+@mention use.
+
+•
+
+Message types.
+
+•
+
+Mark Resolved control.
+
+Open UI wireframe image
+
+9. Wireframe: Object-Level Discussion Entry
+┌──────────────────────────────────────────────────────┐
+│ OBS-17
+
+│
+
+│ Management Fee Overcharge
+│
+
+│
+
+│ Status: Confirmed
+
+│
+
+│ Potential Savings: $24,000
+│
+
+│
+
+│
+
+│
+
+MyLeaseAudit Notes & Discussions Enhancement
+│ [Edit] [Create Savings] [Discussion 8 Open]
+
+│
+
+└──────────────────────────────────────────────────────┘
+
+10. Wireframe: Discussion Drawer
+┌──────────────────────────────────────────────────────────────┐
+│ NOTES & DISCUSSIONS
+
+│
+
+│ OBS-17: Management Fee Overcharge
+
+│
+
+│ Status: Open | Participants: 3 | Attachments: 2
+
+│
+
+├──────────────────────────────────────────────────────────────┤
+│ QUESTION
+
+│
+
+│ Sarah M. | May 20, 2026 9:14 AM
+
+│
+
+│ Need confirmation of lease clause 4.3.
+
+│
+
+│ @John Davis can you review?
+
+│
+
+├──────────────────────────────────────────────────────────────┤
+│ COMMENT
+
+│
+
+│ John D. | May 20, 2026 11:02 AM
+
+│
+
+│ Clause 4.3 limits management fee to 3%.
+│ I attached the lease excerpt.
+
+│
+│
+
+├──────────────────────────────────────────────────────────────┤
+│ DECISION
+
+│
+
+│ Sarah M. | May 20, 2026 11:20 AM
+
+│
+
+│ Confirmed. Updating finding and savings estimate.
+
+│
+
+├──────────────────────────────────────────────────────────────┤
+│ [Mark Resolved] [Reopen] [Attach File]
+
+│
+
+├──────────────────────────────────────────────────────────────┤
+│ Type message... use @ to mention a user
+│ [Send]
+
+│
+
+│
+
+└──────────────────────────────────────────────────────────────┘
+
+MyLeaseAudit Notes & Discussions Enhancement
+11. Message Types
+Each message should have a type.
+Message Type
+
+Purpose
+
+Comment
+
+General note or update
+
+Question
+
+A question needing response
+
+Decision
+
+A documented conclusion
+
+Review Request Request for QC/PM/user review
+Approval Note
+
+Comment related to approval
+
+System Message Auto-generated event
+Default type:
+Comment
+User may select another type from a dropdown.
+
+12. Thread Status
+Each discussion thread should have a status.
+Status
+
+Meaning
+
+Open
+
+Active discussion
+
+Answered A question has received a response
+Resolved Issue/question resolved
+Closed
+
+Finalized and locked or no longer active
+
+Recommended lifecycle:
+Open
+↓
+Answered
+↓
+Resolved
+↓
+
+MyLeaseAudit Notes & Discussions Enhancement
+Closed
+
+13. Message-Level Status
+For message types such as Question or Review Request, support message-level status.
+Message Status Meaning
+Open
+
+Needs response
+
+Answered
+
+Response provided
+
+Resolved
+
+Accepted/resolved
+
+Closed
+
+No further action
+
+This allows one thread to contain multiple questions.
+
+14. @Mentions
+Support user mentions using:
+@First Last
+UX behavior:
+User types @
+System opens searchable user dropdown
+User selects person
+Mention becomes tagged
+Mentioned user receives notification
+Mention search should include:
+Auditors
+Project Managers
+Admins
+QC reviewers
+Users assigned to the audit
+Users in assigned user groups
+
+MyLeaseAudit Notes & Discussions Enhancement
+15. Notifications
+15.1 In-App Notifications
+Create in-app notifications for:
+User mentioned
+Question assigned
+Review requested
+Reply to user’s question
+Discussion resolved
+Discussion reopened
+Example:
+You were mentioned in OBS-17: Management Fee Overcharge.
+15.2 Email Notifications
+Send email notification when a user is mentioned or assigned a question/review request.
+Example subject:
+You were mentioned in MyLeaseAudit
+Example body:
+Sarah M. mentioned you in:
+
+OBS-17 — Management Fee Overcharge
+
+Message:
+Can you confirm whether lease clause 4.3 limits the management fee to 3%?
+
+[View Discussion]
+15.3 Notification Controls
+Users should be able to receive notifications for:
+Mentions only
+Mentions and replies
+All discussions on assigned audits
+
+MyLeaseAudit Notes & Discussions Enhancement
+At minimum, implement mentions and assigned question/review notifications.
+
+16. Attachments
+Allow attachments to discussion messages.
+Attachment types:
+PDF
+DOCX
+XLSX
+Image
+Screenshot
+Calculation file
+Document link
+Attachments should either:
+1. Link to an existing MyLeaseAudit document, or
+2. Upload a new file and associate it with the discussion message.
+
+17. Activity Logging
+Every discussion event should create an activity entry.
+Examples:
+Discussion message added
+Question asked
+User mentioned
+Attachment added
+Question answered
+Discussion resolved
+Discussion reopened
+Discussion closed
+This preserves the audit trail.
+
+MyLeaseAudit Notes & Discussions Enhancement
+18. Search and Filters
+Users should be able to search Notes & Discussions across an audit.
+Filters:
+Keyword
+User
+Mentioned user
+Parent object type
+Parent object ID
+Audit year
+Status
+Message type
+Date range
+Has attachment
+Unresolved only
+Suggested search location:
+Audit-level Notes & Discussions search panel
+Do not create a full chat tab unless later needed. Search can be part of existing Notes area or
+global audit search.
+
+19. Dashboard Additions
+Add a dashboard widget for collaboration.
+┌─────────────────────────────────┐
+│ Notes & Discussions
+
+│
+
+├─────────────────────────────────┤
+│ My Mentions
+
+3
+
+│
+
+│ Open Questions
+
+12
+
+│
+
+│ Pending Reviews
+
+5
+
+│
+
+│ Resolved This Week
+
+18
+
+│
+
+└─────────────────────────────────┘
+
+MyLeaseAudit Notes & Discussions Enhancement
+Minimum dashboard metrics:
+My Mentions
+Open Questions
+Pending Review Requests
+Unresolved Discussions
+
+20. Recommended Fields
+20.1 DiscussionThread
+Field
+
+Type
+
+Required
+
+Notes
+
+thread_id
+
+System ID
+
+Yes
+
+Auto-generated
+
+audit_id
+
+Foreign key
+
+Yes
+
+Parent audit
+
+audit_year_id
+
+Foreign key
+
+Conditional Required if parent object is year-specific
+
+parent_object_type
+
+Dropdown/String
+enum
+
+Yes
+
+Audit, Document, ValidationFinding,
+Observation, ChecklistItem,
+ApprovalRequest, SavingsRecord,
+GeneratedOutput
+
+parent_object_id
+
+Foreign key /
+polymorphic ID
+
+Yes
+
+ID of the object being discussed
+
+thread_title
+
+Short text
+
+Yes
+
+Usually inherited from parent object
+
+status
+
+Dropdown
+
+Yes
+
+Open, Answered, Resolved, Closed
+
+priority
+
+Dropdown
+
+Optional
+
+Low, Normal, High, Urgent
+
+message_count
+
+Number
+
+Yes
+
+Derived
+
+unresolved_count Number
+
+Yes
+
+Derived
+
+participant_count Number
+
+Yes
+
+Derived
+
+attachment_count Number
+
+Yes
+
+Derived
+
+created_by
+
+User
+
+Yes
+
+Auto
+
+created_at
+
+DateTime
+
+Yes
+
+Auto
+
+updated_at
+
+DateTime
+
+Yes
+
+Auto
+
+MyLeaseAudit Notes & Discussions Enhancement
+Field
+
+Type
+
+Required
+
+resolved_by
+
+User
+
+Optional
+
+resolved_at
+
+DateTime
+
+Optional
+
+closed_by
+
+User
+
+Optional
+
+closed_at
+
+DateTime
+
+Optional
+
+Notes
+
+20.2 DiscussionMessage
+Field
+
+Type
+
+Required
+
+Notes
+
+message_id
+
+System ID
+
+Yes
+
+Auto-generated
+
+thread_id
+
+Foreign key
+
+Yes
+
+Parent thread
+
+parent_message_id Foreign key
+
+Optional
+
+For threaded replies
+
+message_type
+
+Dropdown
+
+Yes
+
+Comment, Question, Decision, Review Request,
+Approval Note, System Message
+
+message_text
+
+Long text /
+rich text
+
+Yes
+
+Supports mentions
+
+message_status
+
+Dropdown
+
+Conditional Open, Answered, Resolved, Closed
+
+assigned_to
+
+User / multiuser
+
+Optional
+
+For questions/review requests
+
+created_by
+
+User
+
+Yes
+
+Auto
+
+created_at
+
+DateTime
+
+Yes
+
+Auto
+
+edited_at
+
+DateTime
+
+Optional
+
+deleted_at
+
+DateTime
+
+Optional
+
+Soft delete only
+
+is_internal
+
+Boolean
+
+Yes
+
+Default true
+
+is_system_generated Boolean
+
+Yes
+
+Default false
+
+20.3 DiscussionMention
+
+MyLeaseAudit Notes & Discussions Enhancement
+Field
+
+Type
+
+mention_id
+
+System ID Yes
+
+Auto-generated
+
+message_id
+
+Foreign key Yes
+
+Parent message
+
+mentioned_user_id User
+
+Required Notes
+
+Yes
+
+Mentioned person
+
+notification_status Dropdown Yes
+
+Pending, Sent, Failed, Read
+
+email_sent
+
+Boolean
+
+Yes
+
+in_app_sent
+
+Boolean
+
+Yes
+
+created_at
+
+DateTime Yes
+
+read_at
+
+DateTime Optional
+
+Auto
+
+20.4 DiscussionAttachment
+Field
+
+Type
+
+Required Notes
+
+attachment_id System ID
+
+Yes
+
+Auto-generated
+
+message_id
+
+Yes
+
+Parent message
+
+Foreign key
+
+document_id Foreign key
+
+Optional Existing MyLeaseAudit document
+
+file_url
+
+URL
+
+Optional If externally stored
+
+file_name
+
+Text
+
+Yes
+
+file_type
+
+Text / MIME type Yes
+
+uploaded_by User
+
+Yes
+
+uploaded_at
+
+Yes
+
+DateTime
+
+21. Permissions
+Function
+
+Auditor QC Reviewer Project Manager Admin
+
+View discussions on assigned audit Yes
+
+Yes
+
+Yes
+
+Yes
+
+Create message
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+MyLeaseAudit Notes & Discussions Enhancement
+Function
+
+Auditor QC Reviewer Project Manager Admin
+
+Reply to message
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+Mention user
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+Attach file
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+Mark own question resolved
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+Mark any discussion resolved
+
+No
+
+Yes
+
+Yes
+
+Yes
+
+Reopen discussion
+
+No
+
+Yes
+
+Yes
+
+Yes
+
+Close discussion
+
+No
+
+No
+
+Yes
+
+Yes
+
+Delete inappropriate message
+
+No
+
+No
+
+No
+
+Yes
+
+Configure notification settings
+
+No
+
+No
+
+Limited
+
+Yes
+
+22. API Requirements
+Minimum endpoints:
+GET /discussion/thread?parent_object_type=&parent_object_id=
+POST /discussion/thread
+POST /discussion/message
+POST /discussion/message/{id}/reply
+PATCH /discussion/message/{id}
+POST /discussion/message/{id}/mention
+POST /discussion/message/{id}/attachment
+PATCH /discussion/thread/{id}/resolve
+PATCH /discussion/thread/{id}/reopen
+PATCH /discussion/thread/{id}/close
+GET /discussion/search
+GET /discussion/my-mentions
+
+23. Notification Workflow
+
+MyLeaseAudit Notes & Discussions Enhancement
+1. User creates message.
+2. System parses message for @mentions.
+3. System creates DiscussionMention records.
+4. System creates in-app notifications.
+5. System sends email notification to mentioned users.
+6. Mentioned user opens discussion from email or dashboard.
+7. Mentioned user replies.
+8. Original commenter receives reply notification.
+9. If resolved, system updates thread/message status.
+10. Activity log records the event.
+
+24. Resolution Workflow
+1. Auditor asks a question in a discussion.
+2. Auditor mentions a user.
+3. Mentioned user receives email and in-app notification.
+4. Mentioned user replies.
+5. Auditor or QC marks the question Answered or Resolved.
+6. If all open questions are resolved, thread status may become Resolved.
+7. Project Manager/Admin may close the thread.
+
+25. UI/UX Instructions
+Use:
+Right-side discussion drawer
+Discussion badge/count on supported objects
+@mention user search
+Message type dropdown
+Status badges
+Attachment control
+Mark Resolved button
+
+MyLeaseAudit Notes & Discussions Enhancement
+Activity logging
+Search/filter panel
+Avoid:
+Slack-like channels
+Separate chat rooms
+Unstructured general chat
+Discussions detached from records
+Real-time chat complexity in phase one
+
+26. Suggested Phasing
+Phase 1: Core Enhanced Notes
+Object-level discussion thread
+Messages
+Replies
+Discussion count
+Right-side drawer
+Activity logging
+Phase 2: Mentions and Notifications
+@mentions
+In-app notifications
+Email notifications
+My Mentions dashboard
+Phase 3: Workflow Controls
+Question status
+Resolve / reopen / close
+Review requests
+Search and filters
+Phase 4: AI Assistance
+Summarize discussion
+
+MyLeaseAudit Notes & Discussions Enhancement
+Extract decision
+Suggest checklist evidence
+Suggest finding update
+
+27. Final Recommendation
+Implement Enhanced Notes & Discussions as a contextual collaboration layer.
+It should:
+Enhance existing Notes
+Attach discussions to audit objects
+Support threaded messages
+Support @mentions
+Notify users by email and in-app notification
+Support attachments
+Support open/resolved workflow
+Log activity
+Remain searchable
+This is the simplest effective solution because it avoids building a separate Slack-style system
+while giving auditors, QC reviewers, project managers, and administrators the collaboration
+features needed to resolve audit questions and document decisions directly inside MyLeaseAudit.
+:::
+
+

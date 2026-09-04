@@ -1,0 +1,1 @@
+docker compose exec -T app php artisan tinker --execute="\$updated = DB::table('users')->where('email', 'receiver.test@myleaseaudit.com')->update(['email' => 'abdul.aziz@cubettech.com']); echo 'Updated rows: ' . \$updated;"
