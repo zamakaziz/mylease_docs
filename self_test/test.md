@@ -1,0 +1,1 @@
+docker exec -t myleaseaudit_app vendor/bin/phpunit tests/Feature/DiscussionModuleTest.php

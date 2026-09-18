@@ -77,3 +77,16 @@ we have adddress filter dropdown plz show complete address
 Wake County, North Carolina, United States, 27519 this much for this
 
 Circle on the Green, Wake County, North Carolina, United States, 27519
+
+
+
+
+todo:
+
+1. https://app.clickup.com/t/37273966/86d4a4ng2
+2. https://app.clickup.com/t/37273966/86d4a4qwg
+3. https://app.clickup.com/t/37273966/86d4a4b4a need smooth focus on text arae
+4. https://app.clickup.com/t/37273966/86d4bbx12 need make better user experience
+
+
+1. when mentioning in the discussion currently we are showing like this @[Aneesh G](484)   that make confussion in the user plz make user name only Aneesh G
