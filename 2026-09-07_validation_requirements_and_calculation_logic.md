@@ -277,9 +277,9 @@ The validation engine reads from and writes to the following primary database ta
 
 ### **Execution Frequency: Once per Validation Run (Atomic Transaction)**
 
-A common question is whether `validation_findings` records are updated continuously rule-by-rule or all at once.
+A common question is whether `validation_findings` records are recreated, purged, or updated in place during a validation run.
 
-> **Answer:** Findings are calculated in memory across all rules first, and then written/updated **ONCE per validation run inside a single atomic database transaction (`DB::transaction`)**.
+> **Answer:** Findings are evaluated in memory across all rules first, and then written/updated **ONCE per validation run inside a single atomic database transaction (`DB::transaction`) using deterministic matching to update existing records in place while preserving IDs and observation links**.
 
 ```mermaid
 sequenceDiagram
@@ -291,47 +291,85 @@ sequenceDiagram
     participant Rules as Rule Suite (LeaseCamConflictRule)
     participant DB as MySQL Database
 
-    User->>Frontend: Selects Statement / Clicks Re-validate
-    Frontend->>Controller: POST /api/audits/{id}/validation/run {statement_id}
-    Controller->>Engine: runValidation(auditId, statementId)
+    User->>Frontend: Selects Statement in Dropdown (@change="onStatementSelected")
+    Frontend->>Controller: POST /api/audits/{id}/validation/run {statement_id, audit_year}
+    Controller->>Engine: runValidation(auditId, auditYear, userId, statementId)
     Engine->>DB: INSERT INTO validation_runs (status: 'Running')
     Engine->>Rules: validate(context)
-    Rules-->>Engine: Returns raw findings array in memory
+    Rules-->>Engine: Returns raw findings array in memory ($rawFindings)
     
     rect rgb(240, 248, 255)
         note over Engine,DB: Single Atomic Database Transaction (DB::transaction)
-        Engine->>DB: DELETE FROM validation_findings WHERE audit_id AND statement_id
-        Engine->>DB: INSERT INTO validation_findings (batch insert new findings)
-        Engine->>DB: INSERT INTO validation_status_histories (initial status 'Open')
+        Engine->>DB: SELECT existing validation_findings WHERE audit_id AND statement_id
+        loop For each raw finding
+            alt Matched existing finding by statement_expense_id or (issue_type + statement_line_reference/category)
+                Engine->>DB: UPDATE validation_findings (update fields in place, preserve status if linked to observation)
+                opt Status changed
+                    Engine->>DB: INSERT INTO validation_status_histories (old_status, new_status, reason)
+                end
+            else No match found
+                Engine->>DB: INSERT INTO validation_findings (new VF-xxxxx finding with status 'Open' / 'Excluded' / 'Cap Exceeded')
+            end
+        end
     end
 
-    Engine->>DB: UPDATE validation_runs SET status = 'Completed'
-    Engine-->>Controller: Returns completed ValidationRun
-    Controller-->>Frontend: Returns JSON response with findings
-    Frontend-->>User: Renders full width table & slide-out drawer
+    Engine->>DB: UPDATE validation_runs SET status = 'Completed', completed_at = NOW()
+    Engine-->>Controller: Returns completed ValidationRun with loaded findings
+    Controller-->>Frontend: Returns JSON response { status: 'success', data: run }
+    Frontend->>Frontend: Calls fetchStatementData(), fetchValidationSummary(), fetchValidationFindings()
+    Frontend-->>User: Re-renders stat cards, panels, full-width table & slide-out drawer
 ```
 
 ---
 
-### **Step-by-Step Execution Mechanics**
+### **Step-by-Step Complete Workflow Mechanics**
 
-1. **Trigger Event:**
-   - Validation runs whenever an auditor selects an expense statement in the dropdown, modifies statement items, or clicks **Re-validate**.
-   - An execution entry is logged in `validation_runs` with status `'Running'`.
+1. **Trigger Event (Frontend User Interaction):**
+   - In the Validation tab (`/auditing?tab=validation&id=834`), when the user selects a statement from the dropdown element `<el-select v-model="selectedAuditStatementId" @change="onStatementSelected">`:
+     - Vue calls `onStatementSelected(statementId)`.
+     - `onStatementSelected` executes `fetchStatementData()` and triggers `triggerValidationRun()`.
+     - `triggerValidationRun()` sends `POST /api/audits/{id}/validation/run` with payload `{ audit_year, statement_id }`.
 
-2. **In-Memory Rule Processing:**
-   - The engine iterates through registered rules (`LeaseCamConflictRule`, etc.).
-   - Each rule evaluates statements against active lease/amendment definitions and returns finding data arrays into memory (`$rawFindings`).
+2. **Validation Run Logging (`validation_runs` Table):**
+   - The backend `ValidationController@run` invokes `ValidationEngine::runValidation`.
+   - An execution record is created in `validation_runs`:
+     - `audit_id`: Audit ID (e.g., 834)
+     - `audit_year`: Audit Year
+     - `statement_id`: Selected Statement ID
+     - `status`: `'Running'`
+     - `started_at`: Current Timestamp
+     - `triggered_by`: Authenticated User ID
 
-3. **Atomic Purge & Insert (`DB::transaction`):**
-   - **Purge Stale Records:** Existing findings for the target `(audit_id, statement_id)` pair are cleared (`DELETE FROM validation_findings`) to avoid duplicate or outdated findings.
-   - **Batch Insert:** New findings generated by the current run are inserted with generated codes (e.g. `VF-10001`).
-   - **Audit History Log:** An initial record is logged into `validation_status_histories` (`old_status: null`, `new_status: Open`, `reason: Created by system validation run`).
+3. **In-Memory Rule Processing:**
+   - The `ValidationEngine` initializes `ValidationContext` and executes all registered rules (e.g., `LeaseCamConflictRule`).
+   - Each rule inspects lease agreements, inclusions/exclusions, caps, and statement expense items (`statement_expenses`).
+   - Results are collected into an in-memory array `$rawFindings`.
 
-4. **Completion:**
-   - The `validation_runs` status is updated to `'Completed'`.
+4. **Atomic In-Place Database Update (`DB::transaction`):**
+   Inside a single database transaction:
+   - Existing findings for `audit_id` (and `statement_id`) are queried from `validation_findings`.
+   - **Deterministic Matching Logic:**
+     - Match Criterion 1: By `statement_expense_id`.
+     - Match Criterion 2: By `issue_type` and `statement_line_reference` / `category`.
+   - **For Matched Records (UPDATE):**
+     - Updating in place **preserves** existing `id`, `validation_id` (e.g. `VF-10001`), and `linked_observation_id`.
+     - Fields like `severity`, `ai_confidence`, `finding_summary`, `ai_explanation`, `estimated_exposure`, `lease_clause_reference`, etc. are updated.
+     - **Status Preservation Rule:** If the finding has a `linked_observation_id` or its status is `'Converted to Observation'`, `'Draft Observation'`, `'Under Review'`, or `'Closed'`, its workflow status is kept intact. Otherwise, status updates to the newly calculated status (`Allowed`, `Excluded`, `Cap Exceeded`).
+     - If the status changed, a log entry is added to `validation_status_histories`.
+   - **For Unmatched Records (INSERT):**
+     - Generates a new unique `validation_id` (format: `VF-` + `(10000 + max_id + 1)`).
+     - Inserts a new record in `validation_findings` with initial status (`Allowed`, `Excluded`, or `Cap Exceeded`).
 
-5. **Post-Validation Manual Updates:**
-   - After initial insertion by the system, individual finding records in `validation_findings` are updated when an auditor manually changes a finding's workflow status (`Open` $\rightarrow$ `In Progress` $\rightarrow$ `Resolved` $\rightarrow$ `Accepted`) or creates a formal Audit Finding via the slide-out drawer.
+5. **Run Completion & Response:**
+   - The `validation_runs` table entry is updated to `status = 'Completed'` with `completed_at`.
+   - The controller returns a JSON response containing the run data and findings.
+
+6. **Frontend UI Refresh & Re-render:**
+   - Upon receiving success, the frontend performs concurrent fetch calls:
+     - `fetchStatementData()` $\rightarrow$ `GET /api/get-statement-with-pes?location_id=...&statement_id=...`
+     - `fetchValidationSummary()` $\rightarrow$ `GET /api/audits/{id}/validation/summary?statement_id=...`
+     - `fetchValidationFindings()` $\rightarrow$ `GET /api/audits/{id}/validation/findings?statement_id=...`
+   - UI updates the 6 KPI summary stat cards, active findings list, and slide-out discussion/observation drawer data.
+
 
 
