@@ -90,3 +90,47 @@ todo:
 
 
 1. when mentioning in the discussion currently we are showing like this @[Aneesh G](484)   that make confussion in the user plz make user name only Aneesh G
+
+
+
+
+
+http://192.168.0.2:3000/auditing?tab=documents&id=807
+
+in document panel i can see only two document with names, Statement1 and  Original Lease - ABC Tech.
+but when am moving validation [page , under statement selection dropdoqn its showing 4 statement.
+
+2024 Statement #4 - Increase Cap: Cost/Size (Allowed)
+2024 Statement #3 - Increase Cap: Index (Cap Exceeded)
+2024 Statement #2 - Increase Cap: % Increase (Excluded Repairs)
+2024 Statement #1 - Increase Cap: No (Allowed)
+
+
+
+
+
+ docker compose exec app php artisan db:seed --class=
+ValidationTestDataSeederV2
+  ✔  Audit 800 — 10 statements seeded.
+  ✔  Audit 808 — 10 statements seeded.
+✅  ValidationTestDataSeederV2 complete — Audits 800 & 808 seeded.
+Database seeding completed successfully.
+c864@CBTL-118:~/Projects/mylease/backend$ 
+
+
+docker compose exec db mysql -u root -proot_password myleaseauditdb -e "
+SELECT id, audit_id, location_id, document_title, year, created_at FROM audit_documents WHERE audit_id = 800;
+"
+
+
+
+docker compose exec -T -e XDG_CONFIG_HOME=/tmp -e AUDIT_ID=800 app php artisan db:seed --class=ValidationTestDataSeederV2
+
+
+| Status              | Simple meaning                                                                 |
+| ------------------- | ------------------------------------------------------------------------------ |
+| 🟢 **Allowed**      | We know it is allowed                                                          |
+| 🔴 **Excluded**     | We know it is not allowed                                                      |
+| 🟠 **Cap Exceeded** | We know it is allowed but exceeds the cap                                      |
+| 🟡 **Limited**      | Statement is too summarized to determine the exact result                      |
+| 🟡 **Needs Review** | Something is missing/ambiguous/unsupported, so the system cannot safely decide |

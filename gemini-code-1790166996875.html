@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Validation — MyLeaseAudit Workflow Demo</title>
+<style>
+:root{
+  --purple:#5a5fce; --purple-dk:#4548a8; --navy:#1c2541;
+  --green:#1f9254; --green-bg:#e8f7ee;
+  --red:#d64545; --red-bg:#fdeaea;
+  --orange:#e08a2c; --orange-bg:#fdf1e3;
+  --amber:#c9971f; --amber-bg:#fdf6e0;
+  --blue:#3b6fd6; --blue-bg:#eaf0fd;
+  --gray:#6b7280; --gray-bg:#f3f4f6;
+  --ink:#1c2541; --sub:#6b7280; --line:#e4e6ef; --bg:#f3f4fa;
+  box-sizing:border-box;
+}
+*{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);font-size:13.5px;}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-thumb{background:#c7c9de;border-radius:4px}
+
+/* App Bar & Navigation */
+.appbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;border-radius:8px;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.brand{font-weight:700;font-size:15px}
+.brand small{display:block;font-weight:400;color:var(--sub);font-size:11px}
+.appnav{margin-left:auto;display:flex;gap:18px;color:var(--sub);font-size:13px;flex-wrap:wrap}
+.appnav .active{color:var(--purple);font-weight:600}
+
+.breadcrumb{background:linear-gradient(90deg,var(--purple),var(--purple-dk));color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.breadcrumb .title{font-weight:700;font-size:15px}
+.breadcrumb .sub{opacity:.85;font-size:12px}
+.breadcrumb .mid{margin:0 auto;font-weight:600}
+.pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer}
+.crumbtabs{background:#fff;border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:22px;color:var(--sub);font-size:13px;overflow-x:auto}
+.crumbtabs span{padding:11px 0;white-space:nowrap;cursor:pointer}
+.crumbtabs .active{color:var(--purple);font-weight:600;border-bottom:2px solid var(--purple)}
+
+.wrap{padding:18px 20px 60px}
+.header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+h1.page-title{margin:0;font-size:21px;font-weight:700}
+
+/* Complete 18-Stage Validation Lifecycle Stepper (Req 10) */
+.workflow-bar{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 16px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);overflow-x:auto;margin-bottom:12px;white-space:nowrap}
+.wf-step{display:flex;align-items:center;gap:4px}
+.wf-step.done{color:var(--green);font-weight:600}
+.wf-step.active{color:var(--purple);font-weight:700}
+.wf-sep{color:#ccc;font-size:10px}
+
+/* Version Lineage & Scope Banner (Req 5) */
+.lineage-scope{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.lineage-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:12px;display:flex;align-items:center;gap:8px;flex:1}
+.scope-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:12px;flex:2;display:flex;justify-content:space-between;align-items:center}
+
+/* Header Fields */
+.vhead{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:10px;
+  display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+.vhead .field label{display:block;font-size:11px;color:var(--sub);margin-bottom:5px;font-weight:600}
+.vhead select,.vhead .static{border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:13px;background:#fff;min-width:210px}
+.vhead .static{background:#f8f9fd;color:var(--ink);font-weight:500}
+.vhead .btns{margin-left:auto;display:flex;gap:8px;align-self:flex-end;flex-wrap:wrap}
+
+.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 13px;font-size:12.5px;cursor:pointer;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{background:#f4f5fb;border-color:#cfd2e6}
+.btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.primary:hover{background:var(--purple-dk)}
+.btn.success{background:var(--green);border-color:var(--green);color:#fff}
+.btn.warning{background:var(--amber);border-color:var(--amber);color:#fff}
+.btn.small{padding:4px 9px;font-size:11.5px}
+.btn.ghost{background:transparent}
+
+/* Automatic Lease Match Callout */
+.matchnote{background:#fff;border:1px solid var(--line);border-radius:9px;padding:12px 16px;margin-bottom:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.matchnote .who{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px}
+.matchnote .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+.matchnote .why{font-size:12px;color:var(--sub)}
+.matchnote .why b{color:var(--ink)}
+.lockline{font-size:11.5px;color:var(--sub);margin-left:auto;display:flex;align-items:center;gap:4px}
+
+/* Enhanced KPIs with Dual Building vs Tenant Distinction */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s}
+.kpi:hover{box-shadow:0 3px 12px rgba(28,37,65,.07)}
+.kpi.active{outline:2px solid var(--purple);outline-offset:-1px}
+.kpi .lbl{font-size:11px;color:var(--sub);font-weight:600}
+.kpi .val{font-size:19px;font-weight:700;margin:3px 0}
+.kpi .subval{font-size:11.5px;color:var(--purple);font-weight:600}
+.kpi .foot{font-size:11px;color:var(--sub);margin-top:2px}
+.kpi.total{border-left-color:var(--blue)}
+.kpi.allowed{border-left-color:var(--green)}.kpi.allowed .val{color:var(--green)}
+.kpi.excluded{border-left-color:var(--red)}.kpi.excluded .val{color:var(--red)}
+.kpi.cap{border-left-color:var(--orange)}.kpi.cap .val{color:var(--orange)}
+.kpi.review{border-left-color:var(--amber)}.kpi.review .val{color:var(--amber)}
+.kpi.exposure{border-left-color:var(--navy)}
+
+.maintabs{display:flex;gap:6px;margin-bottom:16px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:5px;width:fit-content}
+.maintabs button{border:none;background:transparent;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer}
+.maintabs button.active{background:var(--purple);color:#fff}
+
+.view{display:none}
+.view.active{display:block}
+
+/* 3-Column Layout */
+.cols{display:grid;grid-template-columns:1fr 1.4fr 1.15fr;gap:14px;align-items:start}
+@media (max-width:1200px){.cols{grid-template-columns:1fr 1fr}.cols>.panel:nth-child(3){grid-column:1/-1}}
+@media (max-width:768px){.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.panel h3{margin:0;background:var(--navy);color:#fff;padding:11px 14px;font-size:13px;display:flex;gap:8px;align-items:center}
+.panel h3 .num{width:20px;height:20px;border-radius:50%;background:var(--purple);display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.panel-body{padding:12px 14px;max-height:720px;overflow-y:auto}
+.search{width:100%;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:12.5px;margin-bottom:8px}
+.subhead{font-size:11.5px;color:var(--sub);margin-bottom:8px}
+.subhead b{color:var(--ink);display:block;font-size:13px;margin-bottom:2px}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:12px}
+.badge .dot{width:6px;height:6px;border-radius:50%}
+.badge.allowed{background:var(--green-bg);color:var(--green)}.badge.allowed .dot{background:var(--green)}
+.badge.excluded{background:var(--red-bg);color:var(--red)}.badge.excluded .dot{background:var(--red)}
+.badge.cap{background:var(--orange-bg);color:var(--orange)}.badge.cap .dot{background:var(--orange)}
+.badge.review{background:var(--amber-bg);color:var(--amber)}.badge.review .dot{background:var(--amber)}
+.badge.info{background:var(--blue-bg);color:var(--blue)}.badge.info .dot{background:var(--blue)}
+.badge.gray{background:var(--gray-bg);color:var(--gray)}.badge.gray .dot{background:var(--gray)}
+
+/* Panel 1 Lists */
+.exp-row{padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid transparent;margin-bottom:4px}
+.exp-row:hover{background:#f8f9fd}
+.exp-row.sel{background:var(--blue-bg);border-color:var(--blue)}
+.exp-row .l1{display:flex;justify-content:space-between;gap:8px}
+.exp-row .nm{font-weight:600;font-size:12.5px}
+.exp-row .amt{font-size:12.5px;white-space:nowrap;font-weight:600}
+.exp-row .l2{margin-top:4px}
+
+.filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.filters select{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12px}
+
+/* Panel 2 Cards */
+.vres-card{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;background:#fff;transition:border-color .15s}
+.vres-card:hover{border-color:#b4b8d9}
+.vres-card.sel{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple);background:#fafaff}
+.vres-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.vres-header .title{font-size:13.5px;font-weight:700}
+.vres-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#f9faff;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:11.5px}
+.vres-grid .field label{display:block;color:var(--sub);font-size:10.5px}
+.vres-grid .field b{font-size:12.5px}
+.vres-meta{font-size:12px;color:var(--sub);margin:4px 0}
+.vres-reason{font-size:11.5px;background:#fff;border-left:3px solid var(--line);padding:5px 8px;margin:6px 0;color:#4b5563;line-height:1.4}
+.vres-card.cap .vres-reason{border-left-color:var(--orange)}
+.vres-card.excluded .vres-reason{border-left-color:var(--red)}
+.vres-card.review .vres-reason{border-left-color:var(--amber)}
+.vres-acts{margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* Panel 3: Contractual Lease Matrix (Req 7: Filtered by Statement Date + Effective Date) */
+.lease-static{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#f9faff}
+.lease-static .row1{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px}
+.lease-static .eff{font-size:11.5px;color:var(--sub);margin-top:4px}
+.lease-static .why{font-size:11.5px;color:var(--sub);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.mtx-table{width:100%;border-collapse:collapse;font-size:12px}
+.mtx-table th{background:#f8f9fd;text-align:left;padding:7px 6px;color:var(--sub);font-size:11px;border-bottom:1px solid var(--line)}
+.mtx-table td{padding:8px 6px;border-bottom:1px solid #f0f0f5;vertical-align:middle;cursor:pointer}
+.mtx-table tr:hover td{background:#f7f7fc}
+
+.timeline{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
+.tl-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;align-items:center}
+.tl-dot{width:9px;height:9px;border-radius:50%;background:#cfd2e6;flex:none}
+.tl-item.on .tl-dot{background:var(--green)}
+.tl-item.on b{color:var(--green)}
+
+/* Drawers & Overlay */
+.overlay{position:fixed;inset:0;background:rgba(28,37,65,.5);display:none;z-index:90}
+.overlay.open{display:block}
+.drawer{position:fixed;top:0;right:-620px;width:580px;max-width:94vw;height:100%;background:#fff;z-index:95;
+  transition:right .25s cubic-bezier(.16,1,.3,1);box-shadow:-6px 0 24px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer .dhead{background:var(--navy);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.drawer .dhead b{font-size:14.5px}
+.drawer .dclose{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1}
+.drawer .dbody{padding:18px;overflow-y:auto;flex:1}
+
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f5;font-size:12.5px}
+.kv b{font-weight:600;text-align:right}
+.trace{margin:10px 0;padding:12px;background:#f7f7fc;border-radius:8px}
+.trace .step{font-size:12px;padding:4px 0;color:var(--sub)}
+.trace .step b{color:var(--ink)}
+.trace .arrow{text-align:center;color:#bbb;font-size:12px;line-height:1}
+.calc-line{background:var(--navy);color:#fff;border-radius:7px;padding:9px;text-align:center;font-weight:700;margin:10px 0;font-size:13px}
+.formula{background:#f7f7fc;border-radius:6px;padding:8px 10px;font-size:12px;font-family:ui-monospace,Menlo,monospace;margin:6px 0}
+.future-hooks{background:#f9fafb;border:1px dashed #d1d5db;border-radius:7px;padding:10px 12px;margin-top:14px;font-size:11.5px;color:var(--sub)}
+.future-hooks b{color:var(--ink)}
+
+/* Form Controls */
+label.f{display:block;font-size:11.5px;font-weight:600;color:var(--sub);margin:10px 0 4px}
+input.f,select.f,textarea.f{width:100%;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:13px}
+textarea.f{min-height:65px;resize:vertical}
+.tag-notice{display:none;font-size:12px;padding:8px 12px;border-radius:6px;margin-top:10px;font-weight:600}
+.tag-notice.show{display:block}
+.tag-notice.success{background:var(--green-bg);color:var(--green)}
+.tag-notice.error{background:var(--red-bg);color:var(--red)}
+
+/* CAM & Non-CAM Tab Layouts */
+.cam-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.cam-grid{grid-template-columns:1fr}}
+.cam-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px}
+.cam-card h4{margin:0 0 12px;font-size:14px;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.cam-line{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f0f5}
+.cam-line.total{font-weight:700;border-bottom:none;border-top:2px solid var(--ink);margin-top:6px;padding-top:10px}
+.cam-line.final{background:var(--blue-bg);color:var(--blue);padding:10px 12px;border-radius:8px;font-weight:700;margin-top:10px;font-size:14px}
+.neg{color:var(--red)}
+
+.noncam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.noncam-card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;min-height:165px}
+.noncam-card .top{display:flex;justify-content:space-between;align-items:flex-start}
+.noncam-card .desc{font-size:12px;color:var(--sub);margin:8px 0 12px}
+
+/* Tables */
+table.rh{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden;font-size:12.5px}
+table.rh th{text-align:left;background:#f8f9fd;padding:9px 12px;font-size:11.5px;color:var(--sub);border-bottom:1px solid var(--line)}
+table.rh td{padding:9px 12px;border-bottom:1px solid #f0f0f5}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="logo">CL</div>
+  <div class="brand">Company<small>Logo</small></div>
+  <div class="appnav">
+    <span>Dashboard</span><span>Clients</span><span>Locations</span><span>Properties</span><span>Pending Audits</span>
+    <span>Statements</span><span class="active">Audits</span><span>Discussions</span><span>Contacts</span><span>Archives</span><span>Compare</span>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <div><div class="title">2024 Audit</div><div class="sub">ABCTech.004.L.E.495</div></div>
+  <div class="mid">Closure (NMD)</div>
+  <span class="pill">Original Lease Details</span><span class="pill">Start Discussion</span><span class="pill">Overview</span><span class="pill">All Leases</span>
+</div>
+
+<div class="crumbtabs">
+  <span>Documents</span><span>Document Notes</span><span>Actions</span><span>Appointments</span><span>Activities</span>
+  <span>Records</span><span>Contacts</span><span>Comments</span><span class="active">Validation</span><span>Findings &amp; Observations</span><span>Checklist</span><span>Approvals</span><span>Savings</span>
+</div>
+
+<div class="wrap">
+  <div class="header-row">
+    <h1 class="page-title">Validation</h1>
+    <div style="display:flex;gap:8px">
+      <button class="btn success" id="topConfirmBtn">✓ Confirm Validation</button>
+      <button class="btn" id="verCompareBtn">📊 Compare Versions</button>
+      <button class="btn" id="topRunHistBtn">📋 Run History</button>
+    </div>
+  </div>
+
+  <!-- Complete 18-Stage Validation Lifecycle Stepper (Req 10) -->
+  <div class="workflow-bar">
+    <div class="wf-step done"><span>✓</span> Statement</div><div class="wf-sep">→</div>
+    <div class="wf-step done"><span>✓</span> Version</div><div class="wf-sep">→</div>
+    <div class="wf-step done"><span>✓</span> Scope</div><div class="wf-sep">→</div>
+    <div class="wf-step done"><span>✓</span> Lease Match</div><div class="wf-sep">→</div>
+    <div class="wf-step done"><span>✓</span> Matrix</div><div class="wf-sep">→</div>
+    <div class="wf-step done"><span>✓</span> Expense Validation</div><div class="wf-sep">→</div>
+    <div class="wf-step active"><span>●</span> Review &amp; Correct</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Change Preview</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Proposed Run</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> CAM Recon</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Base Year/Floor</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Opex+Tax</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Inputs/Evidence</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Non-CAM</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Evidence Escalation</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Needs Review Res.</div><div class="wf-sep">→</div>
+    <div class="wf-step" id="wfStageConf"><span>○</span> Confirmation</div><div class="wf-sep">→</div>
+    <div class="wf-step"><span>○</span> Confirmed Run</div>
+  </div>
+
+  <!-- Version Context & Lineage Banner (Req 5) -->
+  <div class="lineage-scope">
+    <div class="lineage-card">
+      <span style="font-weight:600">Lineage:</span>
+      <span class="badge info">V1 Original (Summary)</span> → <span class="badge allowed">V2 Detailed (GL Dump)</span> → <span class="badge cap" id="lineageRun">Current Run: VR-003 (Proposed)</span>
+    </div>
+    <div class="scope-box">
+      <div><b>Rule Set:</b> Lease CAM Rules – 2026.1 &nbsp;|&nbsp; <b>Tolerance:</b> $0.01 &nbsp;|&nbsp; <b>Rounding:</b> 2 decimals &nbsp;|&nbsp; <b>Gross-up:</b> 95% Occupancy Standard (§9.2)</div>
+      <button class="btn small ghost" id="scopeBtn">View Scope Details</button>
+    </div>
+  </div>
+
+  <!-- Validation Header & Immutable Inputs (Req 5) -->
+  <div class="vhead">
+    <div class="field"><label>Statement</label>
+      <select id="stmtSel"></select>
+    </div>
+    <div class="field"><label>Statement Version <span title="Changing version establishes a new validation context without overwriting historical runs">🔒</span></label>
+      <select id="verSel">
+        <option value="v2">V2 - Detailed Statement (Active Input Context)</option>
+        <option value="v1">V1 - Summary Statement (Historical Context)</option>
+      </select>
+    </div>
+    <div class="field"><label>Matched Lease <span title="Determined automatically from statement date — Read-only">🔒</span></label>
+      <div class="static" id="matchedLease">—</div>
+    </div>
+    <div class="field"><label>Effective Date</label>
+      <div class="static" id="matchedEff">—</div>
+    </div>
+    <div class="field"><label>Statement Period</label>
+      <div class="static" id="stmtPeriod">—</div>
+    </div>
+    <div class="btns">
+      <button class="btn" id="viewRunBtn">View Calculation Run</button>
+      <button class="btn">💬 Discussion</button>
+    </div>
+  </div>
+
+  <!-- Automatic Lease Match Callout -->
+  <div class="matchnote">
+    <div class="who"><span class="dot"></span><span id="mn-lease">—</span></div>
+    <div class="why" id="mn-why">—</div>
+    <div class="lockline">🔒 Lease matching is automatic and cannot be changed manually.</div>
+  </div>
+
+  <!-- KPI Summary Cards (Gross Tested Needs Review) -->
+  <div class="kpis" id="kpiRow"></div>
+
+  <!-- Main Workflow Tabs -->
+  <div class="maintabs" id="mainTabs">
+    <button data-t="exp" class="active">Expense Validation</button>
+    <button data-t="cam">CAM Reconciliation</button>
+    <button data-t="noncam">Non-CAM Validation</button>
+    <button data-t="run">Run History</button>
+  </div>
+
+  <!-- TAB 1: EXPENSE VALIDATION -->
+  <div class="view active" id="view-exp">
+    <div class="cols">
+      <!-- Panel 1: Expense Statement -->
+      <div class="panel">
+        <h3><span class="num">1</span>Expense Statement</h3>
+        <div class="panel-body">
+          <div class="subhead"><b id="es-name">—</b><span id="es-period">—</span></div>
+          <input class="search" placeholder="Search billed expenses..." id="esSearch">
+          <div id="esList"></div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Validation Results -->
+      <div class="panel">
+        <h3><span class="num">2</span>Validation Results</h3>
+        <div class="panel-body">
+          <div class="filters">
+            <input class="search" style="margin:0;flex:2 1 140px" placeholder="Search validation results..." id="vrSearch">
+            <select id="vrStatus">
+              <option value="all">All Statuses</option>
+              <option value="allowed">Allowed</option>
+              <option value="excluded">Excluded</option>
+              <option value="cap">Cap Exceeded</option>
+              <option value="review">Needs Review</option>
+            </select>
+            <select id="vrCat"><option value="all">All Categories</option></select>
+          </div>
+          <div id="vrList"></div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Contractual Lease Expense Matrix (Req 7: Filtered by Statement Date + Effective Date) -->
+      <div class="panel">
+        <h3><span class="num">3</span>Contractual Lease Expense Matrix</h3>
+        <div class="panel-body">
+          <div class="subhead"><b>Active Contractual Rules Only (Effective &le; Statement Date)</b><span>Click row for clause details</span></div>
+          <div class="lease-static" id="mtxLease"></div>
+          <input class="search" placeholder="Search active lease rules..." id="mtxSearch">
+          <table class="mtx-table">
+            <thead>
+              <tr><th>Category</th><th>Treatment</th><th>Active Rule</th><th>Effective</th><th>Prev Rule</th></tr>
+            </thead>
+            <tbody id="mtxList"></tbody>
+          </table>
+          <div class="timeline">
+            <div class="subhead"><b>Lease Timeline</b><span style="font-size:11px">Informational only — read only</span></div>
+            <div id="tlList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: CAM RECONCILIATION -->
+  <div class="view" id="view-cam">
+    <div class="cam-grid">
+      <!-- 1. CAM Summary Equation -->
+      <div class="cam-card">
+        <h4><span>CAM Summary Equation</span><span class="badge info">Full Recovery Formula</span></h4>
+        <div class="cam-line"><span>Landlord Reported CAM</span><b>$100,000</b></div>
+        <div class="cam-line"><span>Less: Excluded Expenses</span><b class="neg">($10,000)</b></div>
+        <div class="cam-line"><span>Less: Cap Adjustments</span><b class="neg">($5,000)</b></div>
+        <div class="cam-line" style="background:#f9faff;padding:6px 4px;border-radius:4px">
+          <span>Add: Gross-up Adjustment <small style="color:var(--sub)">(90% occ &rarr; 95% standard per &sect;9.2)</small></span>
+          <b style="color:var(--purple)">+$2,500</b>
+        </div>
+        <div class="cam-line total"><span>Corrected CAM Pool</span><b>$87,500</b></div>
+        <div class="cam-line" style="margin-top:6px"><span>Tenant Proportionate Share</span><b>10%</b></div>
+        <div class="cam-line"><span>Tenant CAM Responsibility</span><b>$8,750</b></div>
+        <div class="cam-line"><span>Already Paid by Tenant</span><b class="neg">($8,250)</b></div>
+        <div class="cam-line final"><span>Final Balance</span><span>$500 Due</span></div>
+        <button class="btn primary" style="margin-top:14px;width:100%" id="camDrawerBtn">View Calculation Trace</button>
+        <p style="font-size:11.5px;color:var(--sub);margin-top:8px">Contractual note: Excluded expenses and caps removed from the building pool are never deducted a second time from tenant amounts.</p>
+      </div>
+
+      <!-- 2. Base Year Contribution & Floor Section (Req 1: Category-Level Contribution Trace) -->
+      <div class="cam-card">
+        <h4><span>Base Year Contribution &amp; Floor</span><span class="badge allowed">Zero Floor Active</span></h4>
+        <p style="font-size:12px;color:var(--sub);margin-top:0">Category contribution trace to comparable pool. Zero floor is applied once at pool/tenant level.</p>
+        <table class="rh" style="margin-bottom:10px">
+          <thead><tr><th>Category</th><th>Current Year</th><th>Base Year</th><th>Difference</th><th>Status</th><th>Pool Contrib</th><th>Tenant Share</th><th>Tenant Contrib</th></tr></thead>
+          <tbody id="byTraceTable">
+            <tr>
+              <td><b>Janitorial</b></td>
+              <td>$12,000</td>
+              <td>$10,000</td>
+              <td>+$2,000</td>
+              <td><span class="badge allowed">Included</span></td>
+              <td>$2,000</td>
+              <td>10%</td>
+              <td>+$200</td>
+            </tr>
+            <tr>
+              <td><b>Insurance</b></td>
+              <td>$9,500</td>
+              <td>$8,000</td>
+              <td>+$1,500</td>
+              <td><span class="badge allowed">Included</span></td>
+              <td>$1,500</td>
+              <td>10%</td>
+              <td>+$150</td>
+            </tr>
+            <tr>
+              <td><b>Real Estate Taxes</b></td>
+              <td>$16,000</td>
+              <td>$15,000</td>
+              <td>+$1,000</td>
+              <td><span class="badge allowed">Included</span></td>
+              <td>$1,000</td>
+              <td>10%</td>
+              <td>+$100</td>
+            </tr>
+            <tr>
+              <td><b>Security</b></td>
+              <td>$5,500</td>
+              <td>$5,000</td>
+              <td>+$500</td>
+              <td><span class="badge allowed">Included</span></td>
+              <td>$500</td>
+              <td>10%</td>
+              <td>+$50</td>
+            </tr>
+            <tr>
+              <td><b>Roof Replacement</b></td>
+              <td>$20,000</td>
+              <td>$0</td>
+              <td>+$20,000</td>
+              <td><span class="badge excluded">Excluded</span></td>
+              <td>$0</td>
+              <td>10%</td>
+              <td>$0</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="kv"><span>Comparable Pool Total Increase</span><b>$5,000</b></div>
+        <div class="kv"><span>Tenant Comparable Share (10%)</span><b>$500</b></div>
+        <div class="kv"><span>Contractual Zero Floor Status</span><b style="color:var(--green)">$0 Floor Active (Protected)</b></div>
+        <div style="background:#f8f9fd;border-left:3px solid var(--purple);padding:8px 10px;font-size:11.5px;margin-top:10px;color:var(--sub)">
+          <b>Zero Floor Protection (Req 1):</b> The Zero Floor is applied ONCE at the lease-defined pool/tenant level. It is not applied separately to each category.
+        </div>
+      </div>
+
+      <!-- 3. Opex + Tax Combined Reconciliation Section -->
+      <div class="cam-card">
+        <h4><span>Opex + Tax Combined Section</span><span class="badge review">Combined Scope</span></h4>
+        <div style="font-size:12px;margin-bottom:6px"><b>Landlord Reported Presentation</b></div>
+        <div class="cam-line"><span>Operating Expenses</span><b>$100,000</b></div>
+        <div class="cam-line"><span>Taxes</span><b>$11,000</b></div>
+        <div class="cam-line total"><span>Reported Combined Total</span><b>$111,000</b></div>
+
+        <div style="margin:12px 0 6px;font-size:12px"><b>Contractual Corrected Result</b></div>
+        <div class="cam-line"><span>Operating Expenses (After Exclusions)</span><b>$95,000</b></div>
+        <div class="cam-line"><span>Taxes</span><b>$11,000</b></div>
+        <div class="cam-line final" style="background:#f5f6ff;color:var(--purple)"><span>Corrected Combined Pool</span><span>$106,000</span></div>
+        <div class="kv" style="margin-top:6px"><span>Disallowed Difference</span><b style="color:var(--red)">$5,000 Deducted</b></div>
+        <button class="btn" style="margin-top:12px;width:100%" id="opexTaxBtn">View Combined Calculation</button>
+      </div>
+
+      <!-- 4. Reconciliation Inputs & Evidence (Req 2) -->
+      <div class="cam-card">
+        <h4><span>Reconciliation Inputs &amp; Evidence</span><span class="badge info">Auditor Controls</span></h4>
+        <table class="rh" style="margin-bottom:12px">
+          <thead><tr><th>Input</th><th>Source</th><th>Auditor Value</th><th>Status</th></tr></thead>
+          <tbody id="reconInputsSummaryTable">
+            <tr><td><b>Tenant Share</b></td><td>10.0%</td><td id="rowAudShare">10.0%</td><td><span class="badge allowed">Confirmed</span></td></tr>
+            <tr><td><b>Base Year</b></td><td>2023</td><td id="rowAudBY">2023</td><td><span class="badge allowed">Confirmed</span></td></tr>
+            <tr><td><b>Zero Floor</b></td><td>$0</td><td id="rowAudFloor">$0</td><td><span class="badge allowed">Confirmed</span></td></tr>
+            <tr><td><b>Tax Pool</b></td><td>$11,000</td><td id="rowAudTax">$11,000</td><td><span class="badge review">Source Only</span></td></tr>
+            <tr><td><b>Payment Evidence</b></td><td>$8,250</td><td id="rowAudPmt">$8,250</td><td><span class="badge allowed">Confirmed</span></td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:8px">
+          <button class="btn primary small" id="openReconInputsBtn">Review &amp; Correct Inputs</button>
+          <button class="btn small" onclick="alert('Inputs draft saved locally.')">Save Draft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: NON-CAM VALIDATION -->
+  <div class="view" id="view-noncam">
+    <div class="noncam-grid">
+      <!-- 1. Tenant Improvement Allowance -->
+      <div class="noncam-card">
+        <div class="top"><b>Tenant Improvement Allowance</b><span class="badge review"><span class="dot"></span>Pending</span></div>
+        <div class="desc">Allowance: $50,000 &nbsp;|&nbsp; Used: $30,000 &nbsp;|&nbsp; Remaining: $20,000</div>
+        <div style="font-size:11.5px;color:var(--sub)">Savings determination awaiting auditor reconciliation.</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('ti')">Open Details</button>
+      </div>
+
+      <!-- 2. Security Deposit -->
+      <div class="noncam-card">
+        <div class="top"><b>Security Deposit</b><span class="badge allowed"><span class="dot"></span>No Issue</span></div>
+        <div class="desc">Required: $25,000 &nbsp;|&nbsp; Held: $20,000 &nbsp;|&nbsp; Returned: $5,000</div>
+        <div style="font-size:11.5px;color:var(--green);font-weight:600">Difference: $0 (Matches escrow records)</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('sec')">Open Details</button>
+      </div>
+
+      <!-- 3. Base Rent Schedule -->
+      <div class="noncam-card">
+        <div class="top"><b>Base Rent Schedule</b><span class="badge cap"><span class="dot"></span>Variance Found</span></div>
+        <div class="desc">Jan-2025 &rarr; Apr-2025 period schedule audit.</div>
+        <div style="font-size:11.5px;color:var(--orange);font-weight:600">Variances: Feb (+$1,000 Over), Apr (-$500 Under) — No netting</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('rent')">Open Details</button>
+      </div>
+
+      <!-- 4. Expense Abatement -->
+      <div class="noncam-card">
+        <div class="top"><b>Expense Abatement</b><span class="badge allowed"><span class="dot"></span>No Issue</span></div>
+        <div class="desc">Condition: Construction Period (01-Jun-2025 &rarr; 30-Jun-2025)</div>
+        <div style="font-size:11.5px;color:var(--green);font-weight:600">Credit: $5,000 applied correctly (Variance: $0)</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('abate')">Open Details</button>
+      </div>
+
+      <!-- 5. Rent Escalation -->
+      <div class="noncam-card">
+        <div class="top"><b>Rent Escalation</b><span class="badge cap"><span class="dot"></span>Variance Found</span></div>
+        <div class="desc">Annual 5% increase effective 01-Feb-2025.</div>
+        <div style="font-size:11.5px;color:var(--orange);font-weight:600">Mar-2025 billed $11,000 vs expected $10,500 (+ $500)</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('escl')">Open Details</button>
+      </div>
+
+      <!-- 6. Moving / Signage Allowance -->
+      <div class="noncam-card">
+        <div class="top"><b>Moving / Signage Allowance</b><span class="badge review"><span class="dot"></span>Needs Review</span></div>
+        <div class="desc">Contract Allowance: $15,000 &nbsp;|&nbsp; Used: $10,000 &nbsp;|&nbsp; Remaining: $5,000</div>
+        <div style="font-size:11.5px;color:var(--amber)">Invoice attached — pending proof of payment verification.</div>
+        <button class="btn small" style="margin-top:10px" onclick="openNonCamDrawer('move')">Open Details</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: RUN HISTORY (Req 5: Preserved Validation Contexts) -->
+  <div class="view" id="view-run">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:600;font-size:14px">Validation Run History &amp; Lineage Trace</div>
+      <button class="btn primary small" id="confirmFromHistoryBtn">Confirm Current Run</button>
+    </div>
+    <table class="rh">
+      <thead>
+        <tr><th>Run ID</th><th>Version</th><th>State</th><th>Date</th><th>Created By</th><th>Building Exposure</th><th>Tenant Savings</th><th>Reason</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="runHistoryTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- OVERLAY & MODAL DRAWERS -->
+<div class="overlay" id="overlay"></div>
+
+<!-- 1. Calculation Details Drawer (Req 6: Filtered Cap History, Req 8: Engine vs Auditor) -->
+<div class="drawer" id="calcDrawer">
+  <div class="dhead"><b>Auditable Calculation Details</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="calcBody"></div>
+</div>
+
+<!-- 2. Review & Correct Drawer (Req 8: Preserve Engine Result) -->
+<div class="drawer" id="revDrawer">
+  <div class="dhead"><b>Review &amp; Correct Validation Inputs</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="revBody"></div>
+</div>
+
+<!-- 3. Change Preview Before Recalculation Drawer (Req 9: Cascading Impacts) -->
+<div class="drawer" id="previewDrawer">
+  <div class="dhead"><b>Change Preview &amp; Systemic Impact</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="previewBody"></div>
+</div>
+
+<!-- 4. Contractual Lease Rule Drawer -->
+<div class="drawer" id="ruleDrawer">
+  <div class="dhead"><b>Contractual Lease Rule Details</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="ruleBody"></div>
+</div>
+
+<!-- 5. Evidence Escalation Drawer -->
+<div class="drawer" id="evidenceDrawer">
+  <div class="dhead"><b>Evidence Escalation Workflow</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="evidenceBody"></div>
+</div>
+
+<!-- 6. CAM Trace Drawer -->
+<div class="drawer" id="camDrawer">
+  <div class="dhead"><b>CAM Reconciliation Calculation Trace</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody">
+    <div class="trace">
+      <div class="step"><b>1. Landlord Reported CAM</b> — $100,000</div><div class="arrow">&darr;</div>
+      <div class="step"><b>2. Excluded Operational Expenses</b> — ($10,000)</div><div class="arrow">&darr;</div>
+      <div class="step"><b>3. Contractual Cap Adjustments</b> — ($5,000)</div><div class="arrow">&darr;</div>
+      <div class="step"><b>4. Gross-up Adjustment (&sect;9.2 95% standard)</b> — +$2,500</div><div class="arrow">&darr;</div>
+      <div class="step"><b>5. Corrected CAM Pool Total</b> — $87,500</div><div class="arrow">&darr;</div>
+      <div class="step"><b>6. Tenant Proportionate Share (10%)</b> — $8,750</div><div class="arrow">&darr;</div>
+      <div class="step"><b>7. Payments Remitted by Tenant</b> — ($8,250)</div>
+    </div>
+    <div class="calc-line">$500 NET DUE FROM TENANT</div>
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:11.5px;margin-top:10px">
+      <b>Gross-up Specification:</b> Actual building occupancy of 90% adjusted upwards to contractual 95% threshold per Lease &sect;9.2 on variable janitorial and utility pools (+$2,500).
+    </div>
+  </div>
+</div>
+
+<!-- 7. Reconciliation Inputs Review & Correct Drawer (Req 2) -->
+<div class="drawer" id="reconInputDrawer">
+  <div class="dhead"><b>Review &amp; Correct Reconciliation Inputs</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="reconInputBody"></div>
+</div>
+
+<!-- 7b. CAM Reconciliation Change Preview Drawer (Req 2) -->
+<div class="drawer" id="camReconPreviewDrawer">
+  <div class="dhead"><b>CAM Reconciliation Change Preview</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="camReconPreviewBody"></div>
+</div>
+
+<!-- 8. Opex + Tax Combined Drawer -->
+<div class="drawer" id="opexTaxDrawer">
+  <div class="dhead"><b>Opex + Tax Combined Reconciliation</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody">
+    <div class="trace">
+      <div class="step"><b>Operating Expenses (Landlord Reported)</b> — $100,000</div><div class="arrow">&darr;</div>
+      <div class="step"><b>Disallowed Operational Line Items</b> — ($5,000)</div><div class="arrow">&darr;</div>
+      <div class="step"><b>Corrected Operating Expenses</b> — $95,000</div><div class="arrow">&darr;</div>
+      <div class="step"><b>Real Estate Taxes (Contractual Combined)</b> — $11,000</div>
+    </div>
+    <div class="calc-line">CORRECTED COMBINED POOL: $106,000</div>
+    <div class="kv"><span>Reported Combined Pool</span><b>$111,000</b></div>
+    <div class="kv"><span>Disallowed Difference</span><b style="color:var(--red)">$5,000</b></div>
+    <div class="kv"><span>Tenant Share (10%)</span><b>$10,600</b></div>
+    <div class="kv"><span>Tenant Potential Savings</span><b style="color:var(--purple);font-weight:700">$500</b></div>
+  </div>
+</div>
+
+<!-- 9. Non-CAM Details Drawer -->
+<div class="drawer" id="nonCamDrawer">
+  <div class="dhead"><b id="ncTitle">Non-CAM Validation</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="ncBody"></div>
+</div>
+
+<!-- 10. Run Details Drawer -->
+<div class="drawer" id="runDrawer">
+  <div class="dhead"><b id="runDHead">Calculation Run Details</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="runBody"></div>
+</div>
+
+<!-- 11. Confirmation Screen (Req 3, Req 4) -->
+<div class="drawer" id="confirmDrawer">
+  <div class="dhead"><b>Confirm Validation Run</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody" id="confirmBody"></div>
+</div>
+
+<!-- 12. Version Comparison Drawer -->
+<div class="drawer" id="verCompareDrawer">
+  <div class="dhead"><b>Statement Version Comparison</b><button class="dclose" data-close>&times;</button></div>
+  <div class="dbody">
+    <table class="rh" style="margin-bottom:14px">
+      <thead><tr><th>Metric</th><th>V1 (Summary Statement)</th><th>V2 (Detailed Statement)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Status</b></td><td><span class="badge gray">Superseded</span></td><td><span class="badge allowed">Active Confirmed Input</span></td></tr>
+        <tr><td><b>Total Amount</b></td><td>$50,000</td><td>$60,500</td></tr>
+        <tr><td><b>Expense Lines</b></td><td>8 Lines</td><td>10 Lines</td></tr>
+        <tr><td><b>Detail Level</b></td><td>Category Summary Only</td><td>GL-Level Detailed</td></tr>
+        <tr><td><b>New Categories Found</b></td><td>—</td><td>+ Roof Repair<br>+ Legal Fees</td></tr>
+        <tr><td><b>Source</b></td><td>Initial PDF Notice</td><td>GL Dump &amp; Invoices</td></tr>
+        <tr><td><b>Created Date</b></td><td>20-Sep-2026</td><td>22-Sep-2026</td></tr>
+      </tbody>
+    </table>
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:7px;padding:10px;font-size:12px;margin-bottom:14px">
+      <b>Lineage Trace:</b> V2 detailed breakout revealed unrecoverable capital expenditures and non-recoverable legal costs previously blended into General CAM.
+    </div>
+    <button class="btn primary" style="width:100%" onclick="closeDrawers(); alert('Active validation pinned to immutable V2 statement context.');">Use V2 for Validation</button>
+  </div>
+</div>
+
+<script>
+/* UTILITIES & FORMATTING */
+const money = n => (n === null || n === undefined || isNaN(n)) ? 'N/A' : ((n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', {maximumFractionDigits: 0}));
+const STATUS = {
+  allowed: {label: 'Allowed', cls: 'allowed', badge: '🟢 Allowed'},
+  excluded: {label: 'Excluded', cls: 'excluded', badge: '🔴 Excluded'},
+  cap: {label: 'Cap Exceeded', cls: 'cap', badge: '🟠 Cap Exceeded'},
+  review: {label: 'Needs Review', cls: 'review', badge: '🟡 Needs Review'},
+  info: {label: 'Info', cls: 'info', badge: '🔵 Info'}
+};
+const d2t = s => new Date(s + 'T00:00:00').getTime();
+const fmtDate = s => {
+  if(!s) return '—';
+  const dt = new Date(s + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}).replace(/ /g, '-');
+};
+
+/* CONTRACTUAL RULES REPOSITORY WITH TIMELINE HISTORY (Req 6, Req 7) */
+const ALL_CONTRACTUAL_RULES = [
+  // Original Lease Rules (Active 2024-01-01)
+  {category: 'Cleaning / Janitorial', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 7200, pool: 'Operating Expenses', source: 'Original Lease §4.1', prevRule: 'None (Base)'},
+  {category: 'Common Area HVAC', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 6500, pool: 'Operating Expenses', source: 'Original Lease §4.2', prevRule: 'None'},
+  {category: 'Common Area HVAC', leaseDoc: 'Original Lease', eff: '2024-07-01', treatment: 'Included', capType: 'Index', rate: '6%', base: 6500, pool: 'Operating Expenses', source: 'Original Lease Rider B', prevRule: 'No Cap'},
+  {category: 'Real Estate Taxes', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'Cost/Size', costPerSize: 4.24, size: '2,500 sq ft', pool: 'Taxes', source: 'Original Lease §5.1', prevRule: 'None (Base)'},
+  {category: 'Insurance', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 9100, pool: 'Operating Expenses', source: 'Original Lease §6.0', prevRule: 'None (Base)'},
+  {category: 'Management Fees', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 10000, pool: 'Operating Expenses', source: 'Original Lease §4.1', prevRule: 'None (Base)'},
+  {category: 'Management Fees', leaseDoc: 'Original Lease', eff: '2024-04-01', treatment: 'Included', capType: '% Increase', rate: '5%', base: 10000, pool: 'Operating Expenses', source: 'Original Lease Rider A', prevRule: 'No Cap'},
+  {category: 'Management Fees', leaseDoc: 'Original Lease', eff: '2024-07-01', treatment: 'Included', capType: 'Index', rate: '6%', base: 10000, pool: 'Operating Expenses', source: 'Original Lease Rider B', prevRule: '5% Increase Cap'},
+  {category: 'Security', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 5500, pool: 'Operating Expenses', source: 'Original Lease §4.3', prevRule: 'None (Base)'},
+  {category: 'Landscaping', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 3000, pool: 'Operating Expenses', source: 'Original Lease §4.4', prevRule: 'None (Base)'},
+  {category: 'Landscaping', leaseDoc: 'Original Lease', eff: '2024-07-01', treatment: 'Included', capType: 'Index', rate: '6%', base: 3000, pool: 'Operating Expenses', source: 'Original Lease Rider B', prevRule: 'No Cap'},
+  {category: 'Roof Repair', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Excluded', capType: 'None', pool: 'Operating Expenses', source: 'Original Lease §7.2 (Capital Impr.)', prevRule: 'None (Excluded)'},
+  {category: 'Structural Repair', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Excluded', capType: 'None', pool: 'Operating Expenses', source: 'Original Lease §7.3 (Foundation)', prevRule: 'None (Excluded)'},
+  {category: 'Legal', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Excluded', capType: 'None', pool: 'Operating Expenses', source: 'Original Lease §8.1 (Non-rec Fees)', prevRule: 'None (Excluded)'},
+  {category: 'Utilities', leaseDoc: 'Original Lease', eff: '2024-01-01', treatment: 'Included', capType: 'No', rate: '0%', base: 4000, pool: 'Operating Expenses', source: 'Original Lease §4.5', prevRule: 'None (Base)'},
+
+  // Lease Amendment Rules (Active 2025-07-01)
+  {category: 'Cleaning / Janitorial', leaseDoc: 'Lease Amendment', eff: '2025-07-01', treatment: 'Included', capType: 'No', rate: '0%', base: 7800, pool: 'Operating Expenses', source: 'Lease Amendment §2', prevRule: 'Original Lease §4.1'},
+  {category: 'Management Fees', leaseDoc: 'Lease Amendment', eff: '2025-07-01', treatment: 'Included', capType: 'Fixed Whole', fixed: 15000, pool: 'Operating Expenses', source: 'Lease Amendment §3', prevRule: '6% Index Cap'},
+  {category: 'Common Area HVAC', leaseDoc: 'Lease Amendment', eff: '2025-07-01', treatment: 'Included', capType: 'Index', rate: '10%', base: 8000, pool: 'Operating Expenses', source: 'Lease Amendment §4.1', prevRule: '6% Index Cap'},
+  {category: 'Snow Removal', leaseDoc: 'Lease Amendment', eff: '2025-07-01', treatment: 'Excluded', capType: 'None', pool: 'Operating Expenses', source: 'Lease Amendment §4.2', prevRule: 'Included in Landscaping'},
+  {category: 'Utilities', leaseDoc: 'Lease Amendment', eff: '2025-07-01', treatment: 'Included', capType: 'No', rate: '0%', base: 4500, pool: 'Operating Expenses', source: 'Lease Amendment §5', prevRule: 'Original Lease §4.5'}
+];
+
+/* RECONCILIATION INPUTS AUDITOR STATE (Req 2) */
+let reconInputs = {
+  tenantShare: {source: '10.0%', auditor: '10.0%', status: 'Confirmed', reason: 'Verified against Lease Section §1.4.'},
+  baseYear: {source: '2023', auditor: '2023', status: 'Confirmed', reason: 'Commencement year baseline per Lease Schedule B.'},
+  floor: {source: '$0', auditor: '$0', status: 'Confirmed', reason: 'Lease Section §4.2 prohibits negative CAM assessments.'},
+  taxPool: {source: '$11,000', auditor: '$11,000', status: 'Source Only', reason: 'Municipal tax bill copy pending final assessment notice.'},
+  paymentEvidence: {source: '$8,250', auditor: '$8,250', status: 'Confirmed', reason: 'Wire receipts and ledger matched.'},
+  finalBalance: 500
+};
+
+/* ISOLATED RUN CONTEXTS PER STATEMENT VERSION (Req 5) */
+const RUN_CONTEXTS = {
+  'v1': {
+    runId: 'VR-001',
+    versionLabel: 'V1 (Summary)',
+    state: 'Superseded',
+    createdDate: '20-Sep-2026 09:15',
+    auditor: 'Admin User',
+    period: '01-Jan-2024 → 31-Dec-2024',
+    bldgExposure: 12000,
+    tenantSavings: 1200,
+    reason: 'Initial high-level summary validation prior to detailed statement.',
+    lineage: 'Source V1 PDF Statement extraction'
+  },
+  'v2': {
+    runId: 'VR-003',
+    versionLabel: 'V2 (Detailed)',
+    state: 'Proposed', // Strictly 'Proposed' until confirmed (Req 8)
+    createdDate: '23-Sep-2026 14:10',
+    auditor: 'Admin User',
+    period: '01-Jan-2024 → 31-Dec-2024',
+    bldgExposure: 33700,
+    tenantSavings: 3370,
+    reason: 'Auditor recalculation with cap adjustments and GL breakout.',
+    lineage: 'V2 Detailed GL dump validation run'
+  }
+};
+
+/* MOCK STATEMENT ITEMS WITH PRESERVED ENGINE RESULTS (Req 8) */
+const DATA = {
+  st4: {
+    label: '2024 Statement #4 - Cost/Size Cap Statement',
+    stmtDate: '2024-08-15',
+    period: '01-Jan-2024 → 31-Dec-2024',
+    leaseEff: '2024-01-01',
+    amendEff: '2025-07-01',
+    tenantShare: 0.10,
+    items: [
+      {
+        id:1, name:'Janitorial Service', amount:7200, allowedAmt:7200, status:'allowed', exposure:0, category:'Cleaning / Janitorial', pool:'Operating Expenses', leaseTreatment:'Included – No Cap',
+        reason:'Expense is contractually permitted and within Original Lease allowance.',
+        engineResult:{status:'allowed', allowedAmt:7200, exposure:0, treatment:'Included – No Cap'},
+        cap:{type:'No', eff:'2024-01-01', base:7200, rate:'0%', calc:7200, src:'Original Lease §4.1'}
+      },
+      {
+        id:2, name:'HVAC Maintenance', amount:6500, allowedAmt:6500, status:'allowed', exposure:0, category:'Common Area HVAC', pool:'Operating Expenses', leaseTreatment:'Included – Index Cap',
+        reason:'Expense is contractually permitted and within Original Lease allowance.',
+        engineResult:{status:'allowed', allowedAmt:6500, exposure:0, treatment:'Included – Index Cap'},
+        cap:{type:'Index', eff:'2024-07-01', base:6500, rate:'6%', calc:6890, src:'Original Lease Rider B'}
+      },
+      {
+        id:3, name:'Real Estate Taxes', amount:11500, allowedAmt:10600, status:'cap', exposure:900, category:'Real Estate Taxes', pool:'Taxes', leaseTreatment:'Included – Cost/Size Cap',
+        reason:'Billed amount exceeds contractual cap based on 2,500 SF @ $4.24/SF.',
+        engineResult:{status:'cap', allowedAmt:10600, exposure:900, treatment:'Included – Cost/Size Cap'},
+        cap:{type:'Cost/Size', eff:'2024-01-01', costPerSize:4.24, size:'2,500 sq ft', calc:10600, src:'Original Lease §5.1'}
+      },
+      {
+        id:4, name:'Building Insurance', amount:9100, allowedAmt:9100, status:'allowed', exposure:0, category:'Insurance', pool:'Operating Expenses', leaseTreatment:'Included – No Cap',
+        reason:'Expense is contractually permitted and within Original Lease allowance.',
+        engineResult:{status:'allowed', allowedAmt:9100, exposure:0, treatment:'Included – No Cap'},
+        cap:{type:'No', eff:'2024-01-01', base:9100, rate:'0%', calc:9100, src:'Original Lease §6.0'}
+      },
+      {
+        id:5, name:'Property Management Fee', amount:10800, allowedAmt:10600, status:'cap', exposure:200, category:'Management Fees', pool:'Operating Expenses', leaseTreatment:'Included – Index Cap',
+        reason:'Billed amount exceeds the 6% Index-adjusted contractual cap effective on statement date.',
+        engineResult:{status:'cap', allowedAmt:10600, exposure:200, treatment:'Included – Index Cap'},
+        cap:{type:'Index', eff:'2024-07-01', base:10000, rate:'6%', calc:10600, src:'Original Lease Rider B'}
+      },
+      {
+        id:6, name:'Security Services', amount:5500, allowedAmt:5500, status:'allowed', exposure:0, category:'Security', pool:'Operating Expenses', leaseTreatment:'Included – No Cap',
+        reason:'Expense is contractually permitted and within Original Lease allowance.',
+        engineResult:{status:'allowed', allowedAmt:5500, exposure:0, treatment:'Included – No Cap'},
+        cap:{type:'No', eff:'2024-01-01', base:5500, rate:'0%', calc:5500, src:'Original Lease §4.3'}
+      },
+      {
+        id:7, name:'Roof Replacement', amount:20000, allowedAmt:null, status:'excluded', exposure:20000, category:'Roof Repair', pool:'Operating Expenses', leaseTreatment:'Excluded',
+        reason:'Category is excluded by matched lease operational-cost definition (§7.2 Capital Improvements).',
+        engineResult:{status:'excluded', allowedAmt:null, exposure:20000, treatment:'Excluded'},
+        cap:null
+      },
+      {
+        id:8, name:'Landscaping', amount:3100, allowedAmt:3100, status:'allowed', exposure:0, category:'Landscaping', pool:'Operating Expenses', leaseTreatment:'Included – Index Cap',
+        reason:'Within the 6% Index-adjusted contractual cap for the period.',
+        engineResult:{status:'allowed', allowedAmt:3100, exposure:0, treatment:'Included – Index Cap'},
+        cap:{type:'Index', eff:'2024-07-01', base:3000, rate:'6%', calc:3180, src:'Original Lease Rider B'}
+      },
+      {
+        id:9, name:'Legal Fees', amount:12500, allowedAmt:null, status:'excluded', exposure:12500, category:'Legal', pool:'Operating Expenses', leaseTreatment:'Excluded',
+        reason:'Legal Fees are explicitly non-recoverable under Original Lease §8.1.',
+        engineResult:{status:'excluded', allowedAmt:null, exposure:12500, treatment:'Excluded'},
+        cap:null
+      },
+      {
+        id:10, name:'Unknown Utility Charge', amount:4000, allowedAmt:null, status:'review', exposure:null, category:'Utilities', pool:'Operating Expenses', leaseTreatment:'Included – Needs Review',
+        reason:'Insufficient Evidence / Rule — Missing vendor invoice & ambiguous GL mapping.',
+        engineResult:{status:'review', allowedAmt:null, exposure:null, treatment:'Included – Needs Review'},
+        cap:null
+      }
+    ]
+  },
+  st3: {
+    label: '2025 Statement #1 - Fixed Whole Cap Statement',
+    stmtDate: '2025-08-15',
+    period: '01-Jul-2025 → 31-Dec-2025',
+    leaseEff: '2024-01-01',
+    amendEff: '2025-07-01',
+    tenantShare: 0.10,
+    items: [
+      {
+        id:1, name:'Janitorial Service', amount:7800, allowedAmt:7800, status:'allowed', exposure:0, category:'Cleaning / Janitorial', pool:'Operating Expenses', leaseTreatment:'Included – No Cap',
+        reason:'Expense is contractually permitted and within Lease Amendment allowance.',
+        engineResult:{status:'allowed', allowedAmt:7800, exposure:0, treatment:'Included – No Cap'},
+        cap:{type:'No', eff:'2025-07-01', base:7800, rate:'0%', calc:7800, src:'Lease Amendment §2'}
+      },
+      {
+        id:2, name:'Property Management Fee', amount:28500, allowedAmt:15000, status:'cap', exposure:13500, category:'Management Fees', pool:'Operating Expenses', leaseTreatment:'Included – Fixed Whole Cap',
+        reason:'Billed amount exceeds Fixed Whole contractual cap set by Lease Amendment §3.',
+        engineResult:{status:'cap', allowedAmt:15000, exposure:13500, treatment:'Included – Fixed Whole Cap'},
+        cap:{type:'Fixed Whole', eff:'2025-07-01', fixed:15000, calc:15000, src:'Lease Amendment §3'}
+      },
+      {
+        id:3, name:'Common Area Electricity', amount:9800, allowedAmt:8800, status:'cap', exposure:1000, category:'Common Area HVAC', pool:'Operating Expenses', leaseTreatment:'Included – Index Cap',
+        reason:'Billed amount exceeds 10% Index-adjusted cap for the period.',
+        engineResult:{status:'cap', allowedAmt:8800, exposure:1000, treatment:'Included – Index Cap'},
+        cap:{type:'Index', eff:'2025-07-01', base:8000, rate:'10%', calc:8800, src:'Lease Amendment §4.1'}
+      },
+      {
+        id:4, name:'Snow Removal', amount:14000, allowedAmt:null, status:'excluded', exposure:14000, category:'Landscaping', pool:'Operating Expenses', leaseTreatment:'Excluded',
+        reason:'Snow Removal is excluded from recoverable CAM per Lease Amendment §4.2.',
+        engineResult:{status:'excluded', allowedAmt:null, exposure:14000, treatment:'Excluded'},
+        cap:null
+      },
+      {
+        id:5, name:'Pest Control', amount:1800, allowedAmt:null, status:'review', exposure:null, category:'Utilities', pool:'Operating Expenses', leaseTreatment:'Included – Needs Review',
+        reason:'Insufficient Evidence / Rule — Ambiguous category scope under Amendment.',
+        engineResult:{status:'review', allowedAmt:null, exposure:null, treatment:'Included – Needs Review'},
+        cap:null
+      }
+    ]
+  }
+};
+
+/* AUTOMATIC LEASE MATCHING */
+function matchLease(d){
+  const stmt = d2t(d.stmtDate), amend = d2t(d.amendEff);
+  return stmt >= amend ? 'amendment' : 'original';
+}
+
+let state = {
+  stmt: 'st4',
+  version: 'v2',
+  statusFilter: 'all',
+  catFilter: 'all',
+  esQuery: '',
+  vrQuery: '',
+  mtxQuery: '',
+  selected: null,
+  reviewCandidate: null,
+  isConfirmed: false,
+  confirmedTimestamp: null
+};
+
+// Initialize Statement Selector
+const stmtSel = document.getElementById('stmtSel');
+Object.keys(DATA).forEach(k => {
+  const o = document.createElement('option');
+  o.value = k;
+  o.textContent = DATA[k].label;
+  stmtSel.appendChild(o);
+});
+stmtSel.value = state.stmt;
+stmtSel.addEventListener('change', () => {
+  state.stmt = stmtSel.value;
+  state.selected = null;
+  state.statusFilter = 'all';
+  state.catFilter = 'all';
+  document.getElementById('vrStatus').value = 'all';
+  render();
+});
+
+// Version Switcher Preserves Validation Context (Req 5)
+document.getElementById('verSel').addEventListener('change', e => {
+  state.version = e.target.value;
+  const ctx = RUN_CONTEXTS[state.version];
+  document.getElementById('lineageRun').className = (ctx.state === 'Confirmed' ? 'badge allowed' : (ctx.state === 'Proposed' ? 'badge cap' : 'badge gray'));
+  document.getElementById('lineageRun').textContent = `Current Run: ${ctx.runId} (${ctx.state})`;
+  alert(`Switched to Statement Version ${ctx.versionLabel}.\nSeparate Validation Context Loaded: Run ${ctx.runId} (${ctx.state}).\nHistorical runs remain intact.`);
+  render();
+});
+
+function cur(){ return DATA[state.stmt]; }
+function activeLease(){ return matchLease(cur()); }
+function leaseName(l){ return l === 'amendment' ? 'Lease Amendment' : 'Original Lease'; }
+function leaseEffDate(){ const d = cur(); return activeLease() === 'amendment' ? d.amendEff : d.leaseEff; }
+
+function computeKpis(items){
+  const total = items.reduce((s,i) => s + i.amount, 0);
+  const allowed = items.filter(i => i.status === 'allowed').reduce((s,i) => s + i.amount, 0);
+  const excluded = items.filter(i => i.status === 'excluded').reduce((s,i) => s + i.amount, 0);
+  const capItems = items.filter(i => i.status === 'cap');
+  const capExp = capItems.reduce((s,i) => s + (i.exposure || 0), 0);
+
+  const reviewItems = items.filter(i => i.status === 'review');
+  const reviewGrossAmount = reviewItems.reduce((s,i) => s + i.amount, 0);
+
+  const bldgExposure = items.reduce((s,i) => s + (i.exposure || 0), 0);
+  const tenantSavings = bldgExposure * cur().tenantShare;
+
+  return {total, allowed, excluded, capExp, capCount: capItems.length, reviewCount: reviewItems.length, reviewGrossAmount, bldgExposure, tenantSavings};
+}
+
+function whyText(){
+  const d = cur(), lease = activeLease();
+  const stmtF = fmtDate(d.stmtDate), amendF = fmtDate(d.amendEff);
+  return lease === 'amendment'
+    ? `Statement date ${stmtF} is on/after Lease Amendment effective date ${amendF}.`
+    : `Statement date ${stmtF} is before Lease Amendment effective date ${amendF}.`;
+}
+
+function renderHeader(){
+  const d = cur(), lease = activeLease();
+  document.getElementById('matchedLease').textContent = leaseName(lease);
+  document.getElementById('matchedEff').textContent = fmtDate(leaseEffDate());
+  document.getElementById('stmtPeriod').textContent = d.period;
+  document.getElementById('es-name').textContent = d.label.split(' - ')[0];
+  document.getElementById('es-period').textContent = d.period;
+  document.getElementById('mn-lease').textContent = leaseName(lease) + ' — Effective ' + fmtDate(leaseEffDate());
+  document.getElementById('mn-why').innerHTML = '<b>Why?</b> ' + whyText();
+
+  const ctx = RUN_CONTEXTS[state.version];
+  if(state.isConfirmed || ctx.state === 'Confirmed'){
+    document.getElementById('wfStageConf').className = 'wf-step done';
+    document.getElementById('wfStageConf').innerHTML = '<span>✓</span> Confirmation';
+  } else {
+    document.getElementById('wfStageConf').className = 'wf-step';
+  }
+}
+
+/* RENDER KPIS */
+function renderKpis(){
+  const k = computeKpis(cur().items);
+  const sharePct = (cur().tenantShare * 100).toFixed(0) + '%';
+
+  const cards = [
+    {key:'all', cls:'total', lbl:'Total Statement (Bldg)', val:money(k.total), subval:`Tenant Share: ${money(k.total * cur().tenantShare)}`, foot:'100% of tested gross'},
+    {key:'allowed', cls:'allowed', lbl:'Allowed Amount', val:money(k.allowed), subval:`Tenant: ${money(k.allowed * cur().tenantShare)}`, foot:'Contractually permitted'},
+    {key:'excluded', cls:'excluded', lbl:'Excluded Expenses', val:money(k.excluded), subval:`Tenant Sav: ${money(k.excluded * cur().tenantShare)}`, foot:'Critical audit exposure'},
+    {key:'cap', cls:'cap', lbl:'Cap Adjustments', val:money(k.capExp), subval:`Tenant Sav: ${money(k.capExp * cur().tenantShare)}`, foot:`${k.capCount} items exceed cap`},
+    {key:'review', cls:'review', lbl:'Needs Review', val:money(k.reviewGrossAmount), subval:`${k.reviewCount} Item · Gross Tested`, foot:'Unresolved ($0 Savings)'},
+    {key:'exposure_', cls:'exposure', lbl:'Bldg Exposure / Tenant Sav', val:money(k.bldgExposure), subval:`Tenant Sav: ${money(k.tenantSavings)} (${sharePct})`, foot:'Potential net audit savings'}
+  ];
+
+  document.getElementById('kpiRow').innerHTML = cards.map(c => `
+    <div class="kpi ${c.cls} ${state.statusFilter === c.key ? 'active' : ''}" data-k="${c.key}">
+      <div class="lbl">${c.lbl}</div>
+      <div class="val">${c.val}</div>
+      <div class="subval">${c.subval}</div>
+      <div class="foot">${c.foot}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.kpi').forEach(el => el.addEventListener('click', () => {
+    const k = el.dataset.k;
+    state.statusFilter = (k === 'all' || k === 'exposure_') ? 'all' : k;
+    document.getElementById('vrStatus').value = state.statusFilter;
+    switchTab('exp');
+    render();
+  }));
+}
+
+function categories(){ return [...new Set(cur().items.map(i => i.category))]; }
+function renderCatOptions(){
+  const sel = document.getElementById('vrCat');
+  sel.innerHTML = '<option value="all">All Categories</option>' + categories().map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = state.catFilter;
+}
+
+function passFilters(i, q){
+  if(state.statusFilter !== 'all' && i.status !== state.statusFilter) return false;
+  if(state.catFilter !== 'all' && i.category !== state.catFilter) return false;
+  if(q && !i.name.toLowerCase().includes(q.toLowerCase())) return false;
+  return true;
+}
+
+function renderExpenseList(){
+  const items = cur().items.filter(i => passFilters(i, state.esQuery));
+  document.getElementById('esList').innerHTML = items.map(i => {
+    const s = STATUS[i.status];
+    return `<div class="exp-row ${state.selected === i.id ? 'sel' : ''}" data-id="${i.id}">
+      <div class="l1"><span class="nm">${i.name}</span><span class="amt">${money(i.amount)}</span></div>
+      <div class="l2"><span class="badge ${s.cls}"><span class="dot"></span>${s.label}</span></div>
+    </div>`;
+  }).join('') || '<p style="color:var(--sub);font-size:12px">No expenses match filter.</p>';
+
+  document.querySelectorAll('.exp-row').forEach(el => el.addEventListener('click', () => {
+    state.selected = state.selected === +el.dataset.id ? null : +el.dataset.id;
+    render();
+  }));
+}
+
+/* RENDER VALIDATION RESULTS */
+function renderValidationResults(){
+  const items = cur().items.filter(i => passFilters(i, state.vrQuery));
+  document.getElementById('vrList').innerHTML = items.map(i => {
+    const s = STATUS[i.status];
+    const isRev = (i.status === 'review');
+    const isExcl = (i.status === 'excluded');
+
+    const allowedDisplay = isRev ? 'Not Determined' : (isExcl ? 'N/A' : money(i.allowedAmt));
+    const exposureDisplay = isRev ? 'Not Determined' : (i.exposure ? money(i.exposure) : '$0');
+    const tenantSavingsDisplay = isRev ? 'Not Determined ($0 Recog)' : (i.exposure ? money(i.exposure * cur().tenantShare) : '$0');
+
+    return `<div class="vres-card ${s.cls} ${state.selected === i.id ? 'sel' : ''}" data-id="${i.id}">
+      <div class="vres-header">
+        <div class="title">${i.name}</div>
+        <span class="badge ${s.cls}"><span class="dot"></span>${s.label}</span>
+      </div>
+
+      <div class="vres-grid">
+        <div class="field"><label>Billed (Building)</label><b>${money(i.amount)}</b></div>
+        <div class="field"><label>Allowed Amount</label><b style="${isRev?'color:var(--amber)':''}">${allowedDisplay}</b></div>
+        <div class="field"><label>Building Exposure</label><b style="color:${isRev?'var(--amber)':(i.exposure?'var(--red)':'var(--ink)')}">${exposureDisplay}</b></div>
+        <div class="field"><label>Tenant Savings (10%)</label><b style="color:${isRev?'var(--amber)':'var(--purple)'}">${tenantSavingsDisplay}</b></div>
+      </div>
+
+      <div class="vres-meta"><b>Category:</b> ${i.category} &nbsp;|&nbsp; <b>Pool:</b> ${i.pool || 'Operating Expenses'} &nbsp;|&nbsp; <b>Lease Treatment:</b> ${i.leaseTreatment}</div>
+      <div class="vres-reason"><b>Reason:</b> ${i.reason}</div>
+      ${isRev ? `<div style="font-size:11.5px;color:var(--amber);margin-top:4px"><b>Gross Tested Amount:</b> ${money(i.amount)} (Awaiting Auditor / Evidence)</div>` : ''}
+
+      <div class="vres-acts">
+        <button class="btn small" data-view="${i.id}">View Details</button>
+        <button class="btn small ${isRev ? 'primary' : ''}" data-review="${i.id}">Review &amp; Correct</button>
+        ${(isRev || isExcl) ? `<button class="btn small ghost" data-reqevid="${i.id}">Request Evidence</button>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--sub);font-size:12px">No validation results match filter.</p>';
+
+  document.querySelectorAll('.vres-card').forEach(el => el.addEventListener('click', (e) => {
+    if(e.target.closest('button')) return;
+    state.selected = state.selected === +el.dataset.id ? null : +el.dataset.id;
+    render();
+  }));
+  document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); openCalcDrawer(+b.dataset.view); }));
+  document.querySelectorAll('[data-review]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); openReviewDrawer(+b.dataset.review); }));
+  document.querySelectorAll('[data-reqevid]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); openEvidenceDrawer(+b.dataset.reqevid); }));
+}
+
+function renderMatrixLease(){
+  document.getElementById('mtxLease').innerHTML = `
+    <div class="row1"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>${leaseName(activeLease())}</div>
+    <div class="eff">Effective: ${fmtDate(leaseEffDate())} &nbsp;|&nbsp; Filtered: Effective on or before Statement Date (${fmtDate(cur().stmtDate)})</div>
+    <div class="why">${whyText()}</div>`;
+}
+
+/* CONTRACTUAL LEASE MATRIX FILTERED BY STATEMENT DATE & EFFECTIVE DATE (Req 7) */
+function getActiveContractualRules(){
+  const activeLeaseTitle = leaseName(activeLease());
+  const stmtTime = d2t(cur().stmtDate);
+
+  // Group candidate rules by category for the active lease
+  const relevant = ALL_CONTRACTUAL_RULES.filter(r => r.leaseDoc === activeLeaseTitle && d2t(r.eff) <= stmtTime);
+  const byCat = {};
+  relevant.forEach(r => {
+    if(!byCat[r.category] || d2t(r.eff) > d2t(byCat[r.category].eff)){
+      byCat[r.category] = r;
+    }
+  });
+  return Object.values(byCat);
+}
+
+function renderMatrix(){
+  const query = state.mtxQuery.toLowerCase();
+  const activeRules = getActiveContractualRules();
+  const filtered = activeRules.filter(r => !query || r.category.toLowerCase().includes(query) || r.treatment.toLowerCase().includes(query));
+
+  document.getElementById('mtxList').innerHTML = filtered.map((r, idx) => {
+    const isExcluded = r.treatment === 'Excluded';
+    const isCap = r.capType !== 'No' && r.capType !== 'None';
+    const badgeCls = isExcluded ? 'excluded' : (isCap ? 'cap' : 'allowed');
+    const badgeText = isExcluded ? 'Excluded' : (isCap ? `Included – ${r.capType} Cap` : 'Included – No Cap');
+
+    return `<tr data-idx="${idx}">
+      <td><b>${r.category}</b><br><small style="color:var(--sub)">${r.source}</small></td>
+      <td><span class="badge ${badgeCls}"><span class="dot"></span>${badgeText}</span></td>
+      <td><b>${r.capType}</b> ${r.rate ? `(${r.rate})` : (r.costPerSize ? `($${r.costPerSize}/SF)` : '')}</td>
+      <td>${fmtDate(r.eff)}</td>
+      <td style="color:var(--sub)">${r.prevRule}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('#mtxList tr').forEach(el => el.addEventListener('click', () => {
+    const rule = activeRules[+el.dataset.idx];
+    openRuleDrawer(rule);
+  }));
+}
+
+/* TIMELINE */
+function renderTimeline(){
+  const lease = activeLease(), d = cur();
+  document.getElementById('tlList').innerHTML = `
+    <div class="tl-item ${lease === 'original' ? 'on' : ''}">
+      <div class="tl-dot"></div>
+      <div>
+        <b>${fmtDate(d.leaseEff)} — Original Lease</b>
+        ${lease === 'original' ? ' <span class="badge allowed"><span class="dot"></span>Active</span>' : ' <span class="badge gray">Superseded</span>'}
+      </div>
+    </div>
+    <div class="tl-item ${lease === 'amendment' ? 'on' : ''}">
+      <div class="tl-dot"></div>
+      <div>
+        <b>${fmtDate(d.amendEff)} — Lease Amendment</b>
+        ${lease === 'amendment' ? ' <span class="badge allowed"><span class="dot"></span>Active</span>' : ' <span class="badge gray">Inactive for 2024 Date</span>'}
+      </div>
+    </div>`;
+}
+
+/* RUN HISTORY TABLE (Req 5, Req 8) */
+function renderRunHistory(){
+  const rows = [
+    RUN_CONTEXTS['v2'],
+    {runId:'VR-002', versionLabel:'V2 (Detailed)', state:'Confirmed', createdDate:'21-Sep-2026 10:30', auditor:'Admin User', bldgExposure:41700, tenantSavings:4170, reason:'Initial automated batch run on V2 statement.', lineage:'V2 Automated Run'},
+    RUN_CONTEXTS['v1']
+  ];
+
+  document.getElementById('runHistoryTableBody').innerHTML = rows.map(r => {
+    const bCls = (r.state === 'Confirmed' ? 'allowed' : (r.state === 'Proposed' ? 'cap' : 'gray'));
+    return `<tr>
+      <td><b>${r.runId}</b></td>
+      <td>${r.versionLabel}</td>
+      <td><span class="badge ${bCls}"><span class="dot"></span>${r.state}</span></td>
+      <td>${r.createdDate}</td>
+      <td>${r.auditor}</td>
+      <td>${money(r.bldgExposure)}</td>
+      <td style="color:var(--purple);font-weight:700">${money(r.tenantSavings)}</td>
+      <td>${r.reason}</td>
+      <td>
+        <button class="btn small" onclick="openRunDrawer('${r.runId}')">View</button>
+        <button class="btn small" onclick="openDrawer('verCompareDrawer')">Compare</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function render(){
+  renderHeader();
+  renderKpis();
+  renderCatOptions();
+  renderExpenseList();
+  renderValidationResults();
+  renderMatrixLease();
+  renderMatrix();
+  renderTimeline();
+  renderRunHistory();
+}
+
+/* FILTER & SEARCH LISTENERS */
+document.getElementById('esSearch').addEventListener('input', e => { state.esQuery = e.target.value; renderExpenseList(); });
+document.getElementById('vrSearch').addEventListener('input', e => { state.vrQuery = e.target.value; renderValidationResults(); });
+document.getElementById('vrStatus').addEventListener('change', e => { state.statusFilter = e.target.value; renderKpis(); renderValidationResults(); });
+document.getElementById('vrCat').addEventListener('change', e => { state.catFilter = e.target.value; renderValidationResults(); });
+document.getElementById('mtxSearch').addEventListener('input', e => { state.mtxQuery = e.target.value; renderMatrix(); });
+
+function switchTab(t){
+  document.querySelectorAll('#mainTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t));
+}
+document.querySelectorAll('#mainTabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.t)));
+
+/* DRAWERS & OVERLAY LOGIC */
+const overlay = document.getElementById('overlay');
+function openDrawer(id){ overlay.classList.add('open'); document.getElementById(id).classList.add('open'); }
+function closeDrawers(){ overlay.classList.remove('open'); document.querySelectorAll('.drawer').forEach(d => d.classList.remove('open')); }
+overlay.addEventListener('click', closeDrawers);
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeDrawers));
+
+/* DRAWER 1: CALCULATION DETAILS (Req 6: Filtered Cap History, Req 8: Engine vs Auditor) */
+function capFormulaHtml(cap){
+  if(!cap) return '<div class="formula">N/A — Category explicitly non-recoverable or excluded.</div>';
+  if(cap.type === 'No') return `<div class="formula">Base ${money(cap.base)} &times; (1 + 0%) = ${money(cap.calc)} (No contractual cap restriction)</div>`;
+  if(cap.type === '% Increase') return `<div class="formula">${money(cap.base)} &times; (1 + ${cap.rate}) = ${money(cap.calc)}</div>`;
+  if(cap.type === 'Index') return `<div class="formula">${money(cap.base)} &times; (1 + ${cap.rate}) = ${money(cap.calc)} (CPI-U adjusted)</div>`;
+  if(cap.type === 'Cost/Size') return `<div class="formula">$${cap.costPerSize} / SF &times; ${cap.size} = ${money(cap.calc)}</div>`;
+  if(cap.type === 'Fixed Whole') return `<div class="formula">Contractual Fixed Ceiling = ${money(cap.fixed)}</div>`;
+  return '';
+}
+
+function openCalcDrawer(id){
+  const i = cur().items.find(x => x.id === id);
+  if(!i) return;
+  state.selected = id;
+  const s = STATUS[i.status], lease = activeLease();
+
+  let calcLineHtml = '';
+  if(i.status === 'cap'){
+    calcLineHtml = `${money(i.amount)} (Billed) &minus; ${money(i.cap.calc)} (Allowed Cap) = ${money(i.exposure)} Bldg Exposure`;
+  } else if(i.status === 'excluded'){
+    calcLineHtml = `Billed ${money(i.amount)} is fully excluded = ${money(i.exposure)} Bldg Exposure`;
+  } else if(i.status === 'review'){
+    calcLineHtml = `Billed ${money(i.amount)} — Exposure Not Determined (Decision / Evidence Required)`;
+  } else {
+    calcLineHtml = `Billed ${money(i.amount)} is within contractual allowance = $0 Exposure`;
+  }
+
+  // Req 6: Cap rules filtered by Active Lease, Category, and stmtDate >= eff
+  const activeLeaseTitle = leaseName(lease);
+  const stmtTime = d2t(cur().stmtDate);
+  const relevantCaps = ALL_CONTRACTUAL_RULES.filter(c => c.category === i.category && c.leaseDoc === activeLeaseTitle && d2t(c.eff) <= stmtTime);
+
+  // Latest rule on statement date is the active rule
+  let latestRule = null;
+  relevantCaps.forEach(c => {
+    if(!latestRule || d2t(c.eff) > d2t(latestRule.eff)) latestRule = c;
+  });
+
+  const capHistHtml = relevantCaps.length ? relevantCaps.map(ch => {
+    const isActive = (latestRule && latestRule.eff === ch.eff);
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:11.5px;color:${isActive ? 'var(--green)' : 'var(--sub)'}">
+      <span>${fmtDate(ch.eff)} &rarr; <b>${ch.capType}</b> ${ch.rate ? `(${ch.rate})` : ''} &bull; ${ch.source}</span>
+      <span>${isActive ? '✓ Active on Statement Date' : 'Prior Rule'}</span>
+    </div>`;
+  }).join('') : `<div style="font-size:11.5px;color:var(--sub)">No historical cap rules for this category under ${activeLeaseTitle}.</div>`;
+
+  // Req 8: Show immutable Engine Result alongside Auditor values
+  document.getElementById('calcBody').innerHTML = `
+    <h3 style="margin:0 0 10px;font-size:16px">${i.name}</h3>
+
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px">ENGINE BASELINE VS AUDITOR STATE (REQ 8)</div>
+      <div class="kv"><span>Original Engine Status</span><b>${STATUS[i.engineResult.status].label}</b></div>
+      <div class="kv"><span>Engine Allowed Amount</span><b>${i.engineResult.allowedAmt !== null ? money(i.engineResult.allowedAmt) : 'Not Determined'}</b></div>
+      <div class="kv"><span>Engine Exposure</span><b>${i.engineResult.exposure !== null ? money(i.engineResult.exposure) : 'Not Determined'}</b></div>
+      <div class="kv"><span>Auditor Confirmed Status</span><span class="badge ${s.cls}"><span class="dot"></span>${s.label}</span></div>
+    </div>
+
+    <div class="kv"><span>Building Amount (Billed)</span><b>${money(i.amount)}</b></div>
+    <div class="kv"><span>Tenant Share (10%)</span><b>10.0%</b></div>
+    <div class="kv"><span>Tenant Amount (Billed)</span><b>${money(i.amount * cur().tenantShare)}</b></div>
+    <div class="kv"><span>Matched Lease Document</span><b>${activeLeaseTitle}</b></div>
+    <div class="kv"><span>Contractual Rule Source</span><b>${i.cap ? i.cap.src : (latestRule ? latestRule.source : 'Lease Section §7.2')}</b></div>
+    <div class="kv"><span>Recovery Treatment</span><b>${i.leaseTreatment}</b></div>
+    <div class="kv"><span>Operating Pool</span><b>${i.pool || 'Operating Expenses'}</b></div>
+    <div class="kv"><span>Active Cap Type (on Stmt Date)</span><b>${latestRule ? latestRule.capType : (i.cap ? i.cap.type : 'None')}</b></div>
+    <div class="kv"><span>Cap Effective Date</span><b>${latestRule ? fmtDate(latestRule.eff) : (i.cap ? fmtDate(i.cap.eff) : 'N/A')}</b></div>
+    <div class="kv"><span>Contractual Allowed Cap (Building)</span><b>${i.cap ? money(i.cap.calc) : (i.status === 'excluded' ? 'N/A' : (i.status === 'review' ? 'Not Determined' : money(i.amount)))}</b></div>
+
+    <div style="margin:14px 0 4px;font-weight:700;font-size:12px">AUDITABLE CALCULATION STAGES</div>
+    <div class="trace">
+      <div class="step"><b>1. Input Stage:</b> Building Billed: ${money(i.amount)} &nbsp;|&nbsp; Tenant Share Billed: ${money(i.amount * cur().tenantShare)}</div><div class="arrow">&darr;</div>
+      <div class="step"><b>2. Rule Applied:</b> ${activeLeaseTitle} &bull; ${latestRule ? latestRule.source : 'Exclusion Clause'}</div><div class="arrow">&darr;</div>
+      <div class="step"><b>3. Calculation Stage:</b> ${calcLineHtml}</div><div class="arrow">&darr;</div>
+      <div class="step"><b>4. Result Stage:</b> Building Exposure: ${i.status==='review'?'Not Determined':money(i.exposure)}<br>Tenant Savings Recognized: ${i.status==='review'?'$0 (Unresolved)':money(i.exposure * cur().tenantShare)}</div>
+    </div>
+
+    <div style="font-weight:700;font-size:12px;margin-top:10px">FORMULA EVALUATION</div>
+    ${capFormulaHtml(i.cap)}
+
+    <div style="font-weight:700;font-size:12px;margin:12px 0 4px">CAP HISTORY (FILTERED BY LEASE &amp; STATEMENT DATE &le; ${fmtDate(cur().stmtDate)})</div>
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:7px;padding:8px 10px">${capHistHtml}</div>
+
+    <div style="margin-top:14px;font-weight:700;font-size:12px">VALIDATION RESULT &amp; REASON</div>
+    <div class="calc-line" style="background:${i.status==='excluded'?'var(--red)':(i.status==='cap'?'var(--orange)':(i.status==='review'?'var(--amber)':'var(--green)'))}">
+      ${s.badge.toUpperCase()} — TENANT SAVINGS: ${i.status==='review'?'NOT DETERMINED ($0 RECOG)':money(i.exposure * cur().tenantShare)}
+    </div>
+    <div class="vres-reason"><b>Contractual Reason:</b> ${i.reason}</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+      <button class="btn small" onclick="openRuleDrawer(latestRule || ALL_CONTRACTUAL_RULES[0])">View Lease Rule</button>
+      <button class="btn small" onclick="alert('Viewing original OCR statement line item.')">View Statement</button>
+      <button class="btn small primary" onclick="closeDrawers(); setTimeout(()=>openReviewDrawer(${i.id}), 120)">Review &amp; Correct</button>
+      <button class="btn small ghost" onclick="alert('Observation drafted and added to Findings & Observations tab.')">Create Observation</button>
+    </div>`;
+  openDrawer('calcDrawer');
+}
+
+/* DRAWER 2: REVIEW & CORRECT (Req 8: Preserve Engine Result) */
+function openReviewDrawer(id){
+  const i = cur().items.find(x => x.id === id);
+  if(!i) return;
+  state.reviewCandidate = i;
+  const s = STATUS[i.status];
+
+  document.getElementById('revBody').innerHTML = `
+    <div style="background:#f9faff;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px">IMMUTABLE ENGINE BASELINE (REQ 8)</div>
+      <div class="kv"><span>Expense Item</span><b>${i.name}</b></div>
+      <div class="kv"><span>Engine Result</span><span class="badge ${STATUS[i.engineResult.status].cls}"><span class="dot"></span>${STATUS[i.engineResult.status].label}</span></div>
+      <div class="kv"><span>Engine Allowed Amount</span><b>${i.engineResult.allowedAmt !== null ? money(i.engineResult.allowedAmt) : 'Not Determined'}</b></div>
+      <div class="kv"><span>Engine Exposure</span><b>${i.engineResult.exposure !== null ? money(i.engineResult.exposure) : 'Not Determined'}</b></div>
+    </div>
+
+    <label class="f">Auditor Proposed Treatment</label>
+    <select class="f" id="revTreatmentSel">
+      <option value="engine" selected>Preserve Engine Treatment (${s.label})</option>
+      <option value="allowed">Allowed (Full Recovery)</option>
+      <option value="excluded">Excluded (Non-recoverable)</option>
+      <option value="cap">Cap Exceeded (Apply Contractual Cap)</option>
+      <option value="review">Needs Review (Unresolved / Evidence Needed)</option>
+    </select>
+
+    <div id="condCapBox" style="display:none;background:#fefbf6;border:1px solid #fed7aa;border-radius:7px;padding:10px;margin-top:8px">
+      <div style="font-weight:600;font-size:11.5px;color:var(--orange);margin-bottom:4px">Cap Adjustment Parameters</div>
+      <label class="f" style="margin-top:4px">Cap Type</label>
+      <select class="f" id="revCapType">
+        <option value="% Increase">% Increase (5%)</option>
+        <option value="Index">Index (6% CPI-U)</option>
+        <option value="Cost/Size">Cost/Size ($4.24/SF)</option>
+        <option value="Fixed Whole">Fixed Whole ($15,000)</option>
+      </select>
+      <label class="f">Cap Rate / Amount</label>
+      <input class="f" id="revCapVal" value="6%">
+    </div>
+
+    <div id="condPoolBox" style="display:none;background:#f8f9fe;border:1px solid var(--line);border-radius:7px;padding:10px;margin-top:8px">
+      <div style="font-weight:600;font-size:11.5px;color:var(--purple);margin-bottom:4px">Pool &amp; Accounting Parameters</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label class="f" style="margin-top:4px">CAM Pool</label>
+          <select class="f" id="revPoolSel">
+            <option value="Operating Expenses" selected>Operating Expenses</option>
+            <option value="Taxes">Taxes</option>
+            <option value="Insurance">Insurance Pool</option>
+          </select>
+        </div>
+        <div>
+          <label class="f" style="margin-top:4px">Base Year Baseline</label>
+          <input class="f" id="revBaseYear" value="2023">
+        </div>
+      </div>
+    </div>
+
+    <label class="f">Expense Category</label>
+    <select class="f" id="revCatSel">
+      ${categories().map(c => `<option value="${c}" ${c===i.category?'selected':''}>${c}</option>`).join('')}
+    </select>
+
+    <label class="f">Corrected Building Allowed Amount</label>
+    <input class="f" id="revCorrectedAmt" type="number" value="${i.allowedAmt !== null ? i.allowedAmt : i.amount}">
+
+    <label class="f">Supporting Evidence Document</label>
+    <input class="f" type="text" placeholder="e.g. Invoice_GL482_Approved.pdf">
+
+    <label class="f">Reason * <span style="font-weight:400;color:var(--sub)">(Mandatory whenever overriding engine result)</span></label>
+    <textarea class="f" id="revReason" placeholder="Auditor rationale for change..."></textarea>
+
+    <div class="tag-notice" id="revNotice"></div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn" onclick="closeDrawers()">Cancel</button>
+      <button class="btn" id="revSaveDraftBtn">Save Draft</button>
+      <button class="btn primary" id="revRecalcBtn">Preview Changes</button>
+    </div>`;
+
+  const treatSel = document.getElementById('revTreatmentSel');
+  treatSel.addEventListener('change', () => {
+    const val = treatSel.value;
+    document.getElementById('condCapBox').style.display = (val === 'cap') ? 'block' : 'none';
+    document.getElementById('condPoolBox').style.display = (val === 'allowed' || val === 'cap') ? 'block' : 'none';
+  });
+
+  document.getElementById('revSaveDraftBtn').addEventListener('click', () => {
+    const tag = document.getElementById('revNotice');
+    tag.className = 'tag-notice show success';
+    tag.textContent = 'Draft correction inputs saved locally.';
+  });
+
+  document.getElementById('revRecalcBtn').addEventListener('click', () => {
+    const treatment = document.getElementById('revTreatmentSel').value;
+    const reason = document.getElementById('revReason').value.trim();
+    const tag = document.getElementById('revNotice');
+
+    if(treatment !== 'engine' && !reason){
+      tag.className = 'tag-notice show error';
+      tag.textContent = 'Reason is mandatory when overriding the engine result.';
+      return;
+    }
+
+    const newAllowed = parseFloat(document.getElementById('revCorrectedAmt').value) || 0;
+    const newCategory = document.getElementById('revCatSel').value;
+    const newPool = document.getElementById('revPoolSel') ? document.getElementById('revPoolSel').value : 'Operating Expenses';
+    closeDrawers();
+    setTimeout(() => openChangePreview(i, treatment, reason, newAllowed, newCategory, newPool), 120);
+  });
+
+  openDrawer('revDrawer');
+}
+
+/* DRAWER 3: CHANGE PREVIEW BEFORE RECALCULATION (Req 9: Cascading Impacts) */
+function openChangePreview(item, treatment, reason, newAllowed, newCategory, newPool){
+  const beforeExposure = item.exposure || 0;
+  let afterStatus = item.status;
+  let afterExposure = beforeExposure;
+
+  if(treatment === 'allowed'){
+    afterStatus = 'allowed';
+    afterExposure = 0;
+  } else if(treatment === 'excluded'){
+    afterStatus = 'excluded';
+    afterExposure = item.amount;
+  } else if(treatment === 'cap'){
+    afterStatus = 'cap';
+    afterExposure = Math.max(0, item.amount - newAllowed);
+  } else if(treatment === 'review'){
+    afterStatus = 'review';
+    afterExposure = 0;
+  }
+
+  const expDiff = afterExposure - beforeExposure;
+  const kBefore = computeKpis(cur().items);
+  const kAfterExp = kBefore.bldgExposure + expDiff;
+  const kAfterSav = kAfterExp * cur().tenantShare;
+  const kBeforeSav = kBefore.tenantSavings;
+
+  document.getElementById('previewBody').innerHTML = `
+    <div style="font-weight:700;margin-bottom:12px;font-size:14px">CHANGE PREVIEW &amp; CASCADING TOTALS (REQ 9)</div>
+    
+    <!-- Item Level Delta -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="border:1px solid var(--line);border-radius:8px;padding:12px;background:#fdfdfe">
+        <div style="font-size:11px;font-weight:700;color:var(--sub)">ITEM BEFORE</div>
+        <div style="margin:6px 0"><span class="badge ${STATUS[item.status].cls}">${STATUS[item.status].label}</span></div>
+        <div style="font-size:12px">Allowed: <b>${item.status==='review'?'Not Determined':(item.allowedAmt!==null?money(item.allowedAmt):'N/A')}</b></div>
+        <div style="font-size:12px">Exposure: <b>${money(beforeExposure)}</b></div>
+      </div>
+      <div style="border:1px solid var(--purple);border-radius:8px;padding:12px;background:#f9f9ff">
+        <div style="font-size:11px;font-weight:700;color:var(--purple)">ITEM PROPOSED</div>
+        <div style="margin:6px 0"><span class="badge ${STATUS[afterStatus].cls}">${STATUS[afterStatus].label}</span></div>
+        <div style="font-size:12px">Allowed: <b>${afterStatus==='review'?'Not Determined':money(newAllowed)}</b></div>
+        <div style="font-size:12px">Exposure: <b>${money(afterExposure)}</b></div>
+      </div>
+    </div>
+
+    <!-- System Cascading Totals (Req 9) -->
+    <div style="font-weight:700;font-size:12px;color:var(--navy);margin-bottom:6px">AFFECTED TOTAL CALCULATIONS</div>
+    <table class="rh" style="margin-bottom:14px">
+      <thead><tr><th>Metric</th><th>Before</th><th>After</th><th>Difference</th></tr></thead>
+      <tbody>
+        <tr><td><b>Building Exposure</b></td><td>${money(kBefore.bldgExposure)}</td><td>${money(kAfterExp)}</td><td style="color:${expDiff<0?'var(--green)':'var(--red)'};font-weight:700">${expDiff>0?'+':''}${money(expDiff)}</td></tr>
+        <tr><td><b>Tenant Savings</b></td><td>${money(kBeforeSav)}</td><td>${money(kAfterSav)}</td><td style="color:${expDiff<0?'var(--green)':'var(--red)'};font-weight:700">${(kAfterSav-kBeforeSav)>0?'+':''}${money(kAfterSav-kBeforeSav)}</td></tr>
+        <tr><td><b>CAM Pool Impact</b></td><td>$87,500</td><td>${money(87500 - expDiff)}</td><td>${money(-expDiff)}</td></tr>
+        <tr><td><b>Base Year Comparable</b></td><td>$5,000</td><td>$5,000</td><td>$0 (Floor holds at $0)</td></tr>
+        <tr><td><b>Final Balance Due</b></td><td>$500 Due</td><td>${money(500 + (kAfterSav-kBeforeSav))} Due</td><td>${money(kAfterSav-kBeforeSav)}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="kv"><span>Auditor Rationale</span><b>${reason || 'Engine baseline preserved'}</b></div>
+    <div class="kv"><span>Target Proposed Run</span><b>VR-003 (Proposed)</b></div>
+
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button class="btn" onclick="closeDrawers(); openReviewDrawer(${item.id})">Back to Edit</button>
+      <button class="btn primary" id="confirmRecalcBtn">Confirm &amp; Create Proposed Run</button>
+    </div>`;
+
+  document.getElementById('confirmRecalcBtn').addEventListener('click', () => {
+    if(treatment !== 'engine'){
+      item.status = afterStatus;
+      item.exposure = (afterStatus === 'review' ? null : afterExposure);
+      item.allowedAmt = (afterStatus === 'review' || afterStatus === 'excluded' ? null : newAllowed);
+      item.category = newCategory;
+      item.pool = newPool;
+      item.reason = 'Auditor override: ' + reason;
+      item.leaseTreatment = (afterStatus === 'allowed' ? 'Included (Auditor Override)' : (afterStatus === 'excluded' ? 'Excluded (Auditor Override)' : (afterStatus === 'cap' ? 'Cap Exceeded (Auditor Override)' : 'Needs Review (Auditor Override)')));
+    }
+    RUN_CONTEXTS['v2'].state = 'Proposed';
+    render();
+    closeDrawers();
+    alert('Recalculation complete. Proposed Run VR-003 generated.');
+  });
+
+  openDrawer('previewDrawer');
+}
+
+/* DRAWER 4: LEASE RULE DETAILS */
+function openRuleDrawer(rule){
+  if(!rule) return;
+  document.getElementById('ruleBody').innerHTML = `
+    <h3 style="margin:0 0 10px;font-size:16px">${rule.category}</h3>
+    <div class="kv"><span>Active Lease Document</span><b>${rule.leaseDoc}</b></div>
+    <div class="kv"><span>Contractual Effective Date</span><b>${fmtDate(rule.eff)}</b></div>
+    <div class="kv"><span>Recovery Treatment</span><b>${rule.treatment}</b></div>
+    <div class="kv"><span>Operating Pool</span><b>${rule.pool || 'Operating Expenses'}</b></div>
+    <div class="kv"><span>Increase Cap Type</span><b>${rule.capType}</b></div>
+    ${rule.rate ? `<div class="kv"><span>Rate / Index</span><b>${rule.rate}</b></div>` : ''}
+    ${rule.fixed ? `<div class="kv"><span>Fixed Whole Amount</span><b>${money(rule.fixed)}</b></div>` : ''}
+    ${rule.costPerSize ? `<div class="kv"><span>Cost per Size</span><b>$${rule.costPerSize} / SF</b></div>` : ''}
+    <div class="kv"><span>Previous Cap Rule</span><b>${rule.prevRule}</b></div>
+    <div class="kv"><span>Contractual Rule Source</span><b>${rule.source}</b></div>
+    <button class="btn primary" style="margin-top:14px;width:100%" onclick="closeDrawers()">Close Details</button>`;
+  openDrawer('ruleDrawer');
+}
+
+/* DRAWER 5: EVIDENCE ESCALATION */
+function openEvidenceDrawer(id){
+  const i = cur().items.find(x => x.id === id);
+  if(!i) return;
+
+  document.getElementById('evidenceBody').innerHTML = `
+    <div class="kv"><span>Target Line Item</span><b>${i.name}</b></div>
+    <div class="kv"><span>Tested Gross Amount</span><b>${money(i.amount)}</b></div>
+    <div class="kv"><span>Current State</span><span class="badge review"><span class="dot"></span>Needs Review / Unresolved</span></div>
+    <label class="f">Escalation Reason</label>
+    <input class="f" value="Statement lacks invoice backup or GL breakdown for audit substantiation." readonly>
+    <div style="background:var(--amber-bg);border-left:3px solid var(--amber);padding:10px;font-size:12px;margin:12px 0">
+      <b>Savings Policy:</b> Unsupported amounts remain strictly unresolved in 'Needs Review' status and are NOT counted as audit savings until verifiable proof is reviewed.
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn" onclick="closeDrawers()">Cancel</button>
+      <button class="btn primary" onclick="closeDrawers(); alert('Evidence escalation transmitted to Landlord Portal.')">Save Request</button>
+    </div>`;
+  openDrawer('evidenceDrawer');
+}
+
+/* DRAWER 7: RECONCILIATION INPUTS REVIEW & CORRECT (Req 2) */
+function openReconInputsDrawer(){
+  document.getElementById('reconInputBody').innerHTML = `
+    <p style="font-size:12px;color:var(--sub);margin-top:0">Review and correct auditor inputs. Changes MUST use Change Preview before creating a proposed run.</p>
+    
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px">
+      <label class="f" style="margin-top:0">Effective Tenant Share</label>
+      <input class="f" id="inpShare" value="${reconInputs.tenantShare.auditor}">
+      <label class="f">Base Year</label>
+      <input class="f" id="inpBY" value="${reconInputs.baseYear.auditor}">
+      <label class="f">Zero Floor</label>
+      <input class="f" id="inpFloor" value="${reconInputs.floor.auditor}">
+      <label class="f">Tax Pool</label>
+      <input class="f" id="inpTax" value="${reconInputs.taxPool.auditor}">
+      <label class="f">Payment Evidence Total</label>
+      <input class="f" id="inpPmt" value="${reconInputs.paymentEvidence.auditor}">
+      <label class="f">Reason for Change *</label>
+      <textarea class="f" id="inpReconReason" placeholder="Auditor explanation for reconciliation adjustments..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeDrawers()">Cancel</button>
+      <button class="btn primary" id="saveReconPreviewBtn">Save &amp; Preview Changes</button>
+    </div>`;
+
+  document.getElementById('saveReconPreviewBtn').addEventListener('click', () => {
+    const reason = document.getElementById('inpReconReason').value.trim();
+    if(!reason){ alert('Reason for change is mandatory.'); return; }
+    
+    const draftInputs = {
+      tenantShare: document.getElementById('inpShare').value,
+      baseYear: document.getElementById('inpBY').value,
+      floor: document.getElementById('inpFloor').value,
+      tax: document.getElementById('inpTax').value,
+      payments: document.getElementById('inpPmt').value,
+      reason: reason
+    };
+    closeDrawers();
+    setTimeout(() => openCamReconPreview(draftInputs), 120);
+  });
+
+  openDrawer('reconInputDrawer');
+}
+document.getElementById('openReconInputsBtn').addEventListener('click', openReconInputsDrawer);
+
+/* DRAWER 7b: CAM RECONCILIATION CHANGE PREVIEW (Req 2) */
+function openCamReconPreview(draft){
+  const beforeBal = reconInputs.finalBalance;
+  const afterBal = 500; // Mock consistent reconciliation
+  const diff = afterBal - beforeBal;
+
+  document.getElementById('camReconPreviewBody').innerHTML = `
+    <div style="font-weight:700;margin-bottom:12px;font-size:14px">CAM RECONCILIATION INPUTS CHANGE PREVIEW (REQ 2)</div>
+    
+    <table class="rh" style="margin-bottom:14px">
+      <thead><tr><th>Parameter</th><th>Before Value</th><th>Proposed Value</th></tr></thead>
+      <tbody>
+        <tr><td><b>Tenant Share</b></td><td>${reconInputs.tenantShare.auditor}</td><td style="color:var(--purple);font-weight:700">${draft.tenantShare}</td></tr>
+        <tr><td><b>Base Year</b></td><td>${reconInputs.baseYear.auditor}</td><td style="color:var(--purple);font-weight:700">${draft.baseYear}</td></tr>
+        <tr><td><b>Floor</b></td><td>${reconInputs.floor.auditor}</td><td style="color:var(--purple);font-weight:700">${draft.floor}</td></tr>
+        <tr><td><b>Tax Pool</b></td><td>${reconInputs.taxPool.auditor}</td><td style="color:var(--purple);font-weight:700">${draft.tax}</td></tr>
+        <tr><td><b>Payments</b></td><td>${reconInputs.paymentEvidence.auditor}</td><td style="color:var(--purple);font-weight:700">${draft.payments}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="kv"><span>Before Final Balance</span><b>${money(beforeBal)} Due</b></div>
+    <div class="kv"><span>After Final Balance</span><b>${money(afterBal)} Due</b></div>
+    <div class="kv"><span>Balance Difference</span><b style="color:var(--green)">$0 Variance</b></div>
+    <div class="kv"><span>Reason for Change</span><b>${draft.reason}</b></div>
+
+    <div style="margin:14px 0 6px;font-weight:700;font-size:12px">DEPENDENCY &amp; CONTROL CHECKS</div>
+    <div style="background:#f8f9fd;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:11.5px">
+      <div style="color:var(--green)">✓ Proportionate share syntax validated</div>
+      <div style="color:var(--green)">✓ Single Zero Floor constraint maintained at tenant pool level</div>
+      <div style="color:var(--green)">✓ Ledger payments match verified receipts</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button class="btn" onclick="closeDrawers(); openReconInputsDrawer();">Back to Edit</button>
+      <button class="btn primary" id="confirmReconRunBtn">Confirm &amp; Create Proposed Run</button>
+    </div>`;
+
+  document.getElementById('confirmReconRunBtn').addEventListener('click', () => {
+    reconInputs.tenantShare.auditor = draft.tenantShare;
+    reconInputs.baseYear.auditor = draft.baseYear;
+    reconInputs.floor.auditor = draft.floor;
+    reconInputs.taxPool.auditor = draft.tax;
+    reconInputs.paymentEvidence.auditor = draft.payments;
+    reconInputs.tenantShare.reason = draft.reason;
+
+    document.getElementById('rowAudShare').textContent = draft.tenantShare;
+    document.getElementById('rowAudBY').textContent = draft.baseYear;
+    document.getElementById('rowAudFloor').textContent = draft.floor;
+    document.getElementById('rowAudTax').textContent = draft.tax;
+    document.getElementById('rowAudPmt').textContent = draft.payments;
+
+    RUN_CONTEXTS['v2'].state = 'Proposed';
+    closeDrawers();
+    alert('Proposed Run VR-003 updated with corrected reconciliation parameters.');
+    render();
+  });
+
+  openDrawer('camReconPreviewDrawer');
+}
+
+/* DRAWER 9: NON-CAM VALIDATION DRAWERS */
+function openNonCamDrawer(type){
+  const title = document.getElementById('ncTitle');
+  const body = document.getElementById('ncBody');
+
+  if(type === 'ti'){
+    title.textContent = 'Tenant Improvement Allowance';
+    body.innerHTML = `
+      <div class="kv"><span>Total Contract Allowance</span><b>$50,000</b></div>
+      <div class="kv"><span>Disbursed / Used</span><b>$30,000</b></div>
+      <div class="kv"><span>Remaining Balance</span><b>$20,000</b></div>
+      <label class="f">Savings Determination</label>
+      <select class="f"><option>Pending</option><option>Yes</option><option>No</option><option>Partial</option></select>
+      <button class="btn primary" style="margin-top:14px;width:100%" onclick="closeDrawers(); alert('TI determination saved.');">Save Determination</button>`;
+  } else if(type === 'sec'){
+    title.textContent = 'Security Deposit Reconciliation';
+    body.innerHTML = `
+      <div class="kv"><span>Required Contract Deposit</span><b>$25,000</b></div>
+      <div class="kv"><span>Original Deposit Paid</span><b>$25,000</b></div>
+      <div class="kv"><span>Returned to Tenant</span><b class="neg">($5,000)</b></div>
+      <div class="kv"><span>Currently Held in Escrow</span><b>$20,000</b></div>
+      <div class="kv"><span>Calculated Variance</span><b style="color:var(--green)">$0</b></div>`;
+  } else if(type === 'rent'){
+    title.textContent = 'Base Rent Schedule Audit';
+    body.innerHTML = `
+      <table class="rh" style="margin-bottom:12px">
+        <thead><tr><th>Period</th><th>Expected</th><th>Billed</th><th>Difference</th></tr></thead>
+        <tbody>
+          <tr><td>Jan-2025</td><td>$10,000</td><td>$10,000</td><td>$0</td></tr>
+          <tr><td>Feb-2025</td><td>$10,000</td><td>$11,000</td><td style="color:var(--red);font-weight:700">+$1,000</td></tr>
+          <tr><td>Mar-2025</td><td>$11,000</td><td>$11,000</td><td>$0</td></tr>
+          <tr><td>Apr-2025</td><td>$11,000</td><td>$10,500</td><td style="color:var(--blue);font-weight:700">-$500</td></tr>
+        </tbody>
+      </table>`;
+  } else if(type === 'abate'){
+    title.textContent = 'Expense Abatement Verification';
+    body.innerHTML = `
+      <div class="kv"><span>Condition</span><b>Construction Period Credit</b></div>
+      <div class="kv"><span>Expected Credit</span><b>$5,000</b></div>
+      <div class="kv"><span>Applied Credit</span><b>$5,000</b></div>
+      <div class="kv"><span>Variance</span><b style="color:var(--green)">$0</b></div>`;
+  } else if(type === 'escl'){
+    title.textContent = 'Rent Escalation Validation';
+    body.innerHTML = `
+      <div class="kv"><span>Annual Increase</span><b>5.0%</b></div>
+      <div class="kv"><span>Effective Date</span><b>01-Feb-2025</b></div>
+      <div class="kv"><span>Billed Variance</span><b style="color:var(--red)">+$500 premature jump</b></div>`;
+  } else if(type === 'move'){
+    title.textContent = 'Moving / Signage Allowance';
+    body.innerHTML = `
+      <div class="kv"><span>Allowance</span><b>$15,000</b></div>
+      <div class="kv"><span>Remaining Balance</span><b>$5,000</b></div>
+      <div class="status-line badge review" style="margin-top:14px"><span><span class="dot"></span>STATUS</span><b>NEEDS REVIEW — PROOF OF PAYMENT REQUIRED</b></div>`;
+  }
+  openDrawer('nonCamDrawer');
+}
+
+/* DRAWER 10: RUN DETAILS */
+function openRunDrawer(runId){
+  document.getElementById('runDHead').textContent = 'Calculation Run Details — ' + runId;
+  const ctx = (runId === 'VR-001' ? RUN_CONTEXTS['v1'] : RUN_CONTEXTS['v2']);
+
+  document.getElementById('runBody').innerHTML = `
+    <div class="kv"><span>Run ID</span><b>${runId}</b></div>
+    <div class="kv"><span>Run State</span><span class="badge ${ctx.state==='Confirmed'?'allowed':'cap'}"><span class="dot"></span>${ctx.state}</span></div>
+    <div class="kv"><span>Statement Version</span><b>${ctx.versionLabel}</b></div>
+    <div class="kv"><span>Created Date</span><b>${ctx.createdDate}</b></div>
+    <div class="kv"><span>Auditor</span><b>${ctx.auditor}</b></div>
+    <div class="kv"><span>Building Exposure</span><b>${money(ctx.bldgExposure)}</b></div>
+    <div class="kv"><span>Tenant Potential Savings</span><b style="color:var(--purple)">${money(ctx.tenantSavings)}</b></div>
+    <div class="kv"><span>Lineage Context</span><b>${ctx.lineage}</b></div>
+    <button class="btn" style="margin-top:14px;width:100%" onclick="closeDrawers()">Close Details</button>`;
+  openDrawer('runDrawer');
+}
+
+/* DRAWER 11: CONFIRMATION SCREEN (Req 3, Req 4) */
+function openConfirmModal(){
+  const k = computeKpis(cur().items);
+  const body = document.getElementById('confirmBody');
+  const hasUnresolved = (k.reviewCount > 0);
+
+  if(state.isConfirmed){
+    body.innerHTML = `
+      <div style="text-align:center;padding:16px 0">
+        <div style="font-size:42px;color:var(--green)">✓</div>
+        <h3 style="margin:6px 0">Validation Confirmed</h3>
+        <p style="color:var(--sub);font-size:12px">All items and cap adjustments are locked for formal audit reporting.</p>
+      </div>
+      <div class="kv"><span>Auditor</span><b>Admin User</b></div>
+      <div class="kv"><span>Confirmed At</span><b>${state.confirmedTimestamp || '23-Sep-2026 04:30 PM'}</b></div>
+      <div class="kv"><span>Confirmed Run</span><b>VR-003</b></div>
+      <div class="kv"><span>Statement Version</span><b>V2 - Detailed Statement</b></div>
+      <div class="kv"><span>Building Exposure</span><b>${money(k.bldgExposure)}</b></div>
+      <div class="kv"><span>Tenant Potential Savings</span><b style="color:var(--purple);font-size:14px">${money(k.tenantSavings)}</b></div>
+      <button class="btn" style="margin-top:18px;width:100%" onclick="closeDrawers()">Close</button>`;
+  } else {
+    // Req 4: Complete Multi-Domain Summary
+    body.innerHTML = `
+      <h3 style="margin:0 0 10px;font-size:15px">Confirm Validation Run VR-003</h3>
+      
+      <!-- Domain 1: CAM Expense Validation -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:10px 0 4px">1. CAM EXPENSE VALIDATION</div>
+      <div class="kv"><span>Total Tested Amount</span><b>${money(k.total)}</b></div>
+      <div class="kv"><span>Allowed</span><b>${cur().items.filter(i=>i.status==='allowed').length} Items (${money(k.allowed)})</b></div>
+      <div class="kv"><span>Excluded</span><b>${cur().items.filter(i=>i.status==='excluded').length} Items (${money(k.excluded)})</b></div>
+      <div class="kv"><span>Cap Exceeded</span><b>${k.capCount} Items (${money(k.capExp)} Exposure)</b></div>
+      <div class="kv"><span>Needs Review</span><b style="color:var(--amber)">${k.reviewCount} Item (${money(k.reviewGrossAmount)} Gross Tested)</b></div>
+
+      <!-- Domain 2: CAM Reconciliation -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">2. CAM RECONCILIATION</div>
+      <div class="kv"><span>Reported Amount</span><b>$100,000</b></div>
+      <div class="kv"><span>Corrected Pool</span><b>$87,500</b></div>
+      <div class="kv"><span>Tenant Share (10%)</span><b>$8,750</b></div>
+      <div class="kv"><span>Payments</span><b>($8,250)</b></div>
+      <div class="kv"><span>Final Balance</span><b>$500 Due</b></div>
+
+      <!-- Domain 3: Base Year / Floor -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">3. BASE YEAR / FLOOR</div>
+      <div class="kv"><span>Base Year</span><b>2023 Baseline</b></div>
+      <div class="kv"><span>Comparable Pool Increase</span><b>$5,000</b></div>
+      <div class="kv"><span>Zero Floor Application</span><b style="color:var(--green)">$0 Floor Active (Single Application)</b></div>
+      <div class="kv"><span>Tenant Contribution</span><b>$500</b></div>
+
+      <!-- Domain 4: Opex + Tax -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">4. OPEX + TAX COMBINED</div>
+      <div class="kv"><span>Reported Combined</span><b>$111,000</b></div>
+      <div class="kv"><span>Corrected Combined</span><b>$106,000</b></div>
+      <div class="kv"><span>Difference</span><b style="color:var(--red)">$5,000 Disallowed</b></div>
+
+      <!-- Domain 5: Non-CAM -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">5. NON-CAM VALIDATION</div>
+      <div class="kv"><span>Exceptions Identified</span><b style="color:var(--orange)">Base Rent (+$1,000 / -$500), Escalation (+$500)</b></div>
+      <div class="kv"><span>Potential Savings</span><b style="color:var(--purple)">$1,500 Non-netted Overbillings</b></div>
+      <div class="kv"><span>Needs Review</span><b>1 Item (Moving Allowance Backup)</b></div>
+
+      <!-- Domain 6: Evidence -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">6. EVIDENCE &amp; REQUESTS</div>
+      <div class="kv"><span>Confirmed Evidence</span><b>4 Items (Lease, Invoices, Proof of Payment)</b></div>
+      <div class="kv"><span>Source Only</span><b style="color:var(--amber)">1 Item (Tax Assessment Notice)</b></div>
+      <div class="kv"><span>Outstanding Evidence Requests</span><b>1 Item (Utilities Breakdown Request)</b></div>
+
+      <!-- Domain 7: Final Result -->
+      <div style="font-weight:700;font-size:12px;color:var(--navy);margin:12px 0 4px">7. FINAL VALIDATION RESULT</div>
+      <div class="kv"><span>Building Exposure</span><b>${money(k.bldgExposure)}</b></div>
+      <div class="kv"><span>Tenant Potential Savings</span><b style="color:var(--purple);font-size:14px">${money(k.tenantSavings)}</b></div>
+      <div class="kv"><span>Unresolved Gross Tested Amount</span><b style="color:var(--amber)">${money(k.reviewGrossAmount)} (Excluded from Savings)</b></div>
+
+      <!-- Req 3: Explicit Needs Review Handling -->
+      ${hasUnresolved ? `
+        <div style="background:var(--red-bg);color:#8a2e2e;padding:10px 12px;border-radius:7px;margin:12px 0;font-size:12px;line-height:1.4">
+          <b>⚠️ Cannot Confirm:</b> 1 Needs Review item (${money(k.reviewGrossAmount)} Gross Tested) remains unresolved.
+          <div style="margin-top:6px">
+            <button class="btn small" onclick="closeDrawers(); openReviewDrawer(10);">Resolve Item</button>
+          </div>
+          <div style="margin-top:10px;border-top:1px solid #fca5a5;padding-top:8px">
+            <label style="cursor:pointer;display:flex;gap:6px;align-items:flex-start">
+              <input type="checkbox" id="ackExceptionChk">
+              <span><b>Confirm with Exception:</b> I acknowledge that this item remains unresolved and is excluded from recognized savings.</span>
+            </label>
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+        <button class="btn" onclick="closeDrawers()">Back to Review</button>
+        <button class="btn success" id="executeConfirmBtn" ${hasUnresolved ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>Confirm with Exception</button>
+      </div>`;
+
+    if(hasUnresolved){
+      const chk = document.getElementById('ackExceptionChk');
+      const confBtn = document.getElementById('executeConfirmBtn');
+      chk.addEventListener('change', () => {
+        if(chk.checked){
+          confBtn.disabled = false;
+          confBtn.style.opacity = '1';
+          confBtn.style.cursor = 'pointer';
+        } else {
+          confBtn.disabled = true;
+          confBtn.style.opacity = '0.5';
+          confBtn.style.cursor = 'not-allowed';
+        }
+      });
+    }
+
+    document.getElementById('executeConfirmBtn').addEventListener('click', () => {
+      state.isConfirmed = true;
+      RUN_CONTEXTS['v2'].state = 'Confirmed';
+      const now = new Date();
+      state.confirmedTimestamp = '23-Sep-2026 ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      document.getElementById('lineageRun').className = 'badge allowed';
+      document.getElementById('lineageRun').textContent = 'Current Run: VR-003 (Confirmed)';
+      renderHeader();
+      renderRunHistory();
+      openConfirmModal();
+    });
+  }
+  openDrawer('confirmDrawer');
+}
+
+/* EVENT BINDINGS */
+document.getElementById('topConfirmBtn').addEventListener('click', openConfirmModal);
+document.getElementById('confirmFromHistoryBtn').addEventListener('click', openConfirmModal);
+document.getElementById('verCompareBtn').addEventListener('click', () => openDrawer('verCompareDrawer'));
+document.getElementById('topRunHistBtn').addEventListener('click', () => { switchTab('run'); });
+document.getElementById('camDrawerBtn').addEventListener('click', () => openDrawer('camDrawer'));
+document.getElementById('opexTaxBtn').addEventListener('click', () => openDrawer('opexTaxDrawer'));
+document.getElementById('scopeBtn').addEventListener('click', () => alert('Scope Details:\n- Rule Set: Lease CAM Rules 2026.1\n- Decimals: 2\n- Gross-up: 95% occupancy threshold (§9.2)'));
+
+document.getElementById('viewRunBtn').addEventListener('click', () => openRunDrawer(RUN_CONTEXTS[state.version].runId));
+
+// Initial Render
+render();
+</script>
+</body>
+</html>
