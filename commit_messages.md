@@ -3,6 +3,57 @@
 This file logs proposed commit messages for backend and frontend changes after each completed implementation.
 > **Note**: These messages are generated for reference and review. Commits are not executed automatically.
 
+## [2026-10-07] Batch PDF Concession Data Sync & Financial Terms Review
+
+### Backend (`backend/`)
+```text
+feat(lease-concessions): synchronize concession descriptions, import BaseLeaseConcessionRequest, and restrict duplicate types
+
+- Add import:extracted-data Artisan command to parse extracted JSON files, populate BatchDocument records, and link documents to leases via filename, premise number, or name matching
+- Create LeaseExtractedDataReviewService to manage batch review entities, lease resolution, and synchronizing reviewed financial terms into lease_concessions
+- Register POST /api/batches/file/{batch_document}/resolve-lease and POST /api/batches/file/{batch_document}/sync-concessions endpoints in BatchFileReviewController
+- Implement BaseLeaseConcessionRequest, CreateLeaseConcessionRequest, and UpdateLeaseConcessionRequest with unique type validation per lease and alias normalization (e.g. Rent Concession vs Rent Concessions)
+- Update NonCamConcessionService to distinctly map and preserve all 5 concession types (ti, sec, rent, abate, conc) in Non-CAM validation calculations and results
+- Map primary concession descriptions into Non-CAM observation reasons and conditions
+- Add comprehensive feature test coverage in BatchLeaseConcessionSyncTest, ImportExtractedDataCommandTest, LeaseConcessionsTest, and NonCamConcessionIntegrationTest
+```
+
+### Frontend (`frontend/`)
+```text
+feat(lease-review): synchronize financial terms reviews with lease concessions
+
+- Update Financial Terms review in batches/_batchId/lease/_id.vue with Yes/No dropdown selector for concession type flags
+- Automatically toggle and clear concession Amount and Description input fields based on Yes/No flag selection
+- Implement duplicate concession type prevention with TYPE_ALIASES normalization in Lease Concessions modal (Concessions.vue)
+- Compute availableConcessionTypes dynamically to filter already selected concession types and disable 'Add Concession' button when all types are added
+- Add support for conc (Rent Concession) cards and dynamic fallback for unlisted concession types in Non-CAM validation (auditing.vue)
+- Refine Non-CAM card layout with .non-cam-condition-row, enhanced .non-cam-info callout banner, and dynamic metric labeling
+```
+
+---
+
+## [2026-10-06] Lease Concessions Route Registration & Non-CAM Payment Date Picker
+
+### Backend (`backend/`)
+```text
+fix(lease): register POST route for lease concessions and guard activity log user ID
+
+- Register POST /api/lease-concessions endpoint under sanctum auth route group in routes/api.php
+- Guard activity log user ID falling back to system/guest when unauthenticated or during automated tasks
+- Ensure proper validation and persistence for lease concessions creation
+```
+
+### Frontend (`frontend/`)
+```text
+feat(validation): replace text input with date picker in Non-CAM Confirmed Payment entry
+
+- Replace standard text input with el-date-picker for Payment Date in Non-CAM Confirmed Payment modal
+- Format confirmed payment date with yyyy-MM-dd value format for consistency across validation entries
+- Left-align empty state message in CAM validation results table for improved readability
+```
+
+---
+
 ## [2026-10-05] Document Viewer In-Page HTML Search & Highlighting
 
 ### Backend (`backend/`)

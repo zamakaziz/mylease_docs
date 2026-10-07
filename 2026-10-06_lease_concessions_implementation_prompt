@@ -1,0 +1,704 @@
+# IMPLEMENTATION PROMPT — ADD CONCESSIONS TAB TO LEASE
+
+## Objective
+
+Implement a new **Concessions** tab in the existing **Lease** section of the MyLeaseAudit application.
+
+The new tab must support multiple concession records per lease and must use the existing application architecture, database patterns, extraction structure, permissions, UI components, and source/reference mechanisms wherever possible.
+
+The Concessions tab should be implemented as **Lease Tab #6**, without breaking or modifying the existing Lease tabs.
+
+---
+
+# 1. CONCESSION TYPES
+
+The system must support the following concession types:
+
+1. Security Deposit
+2. Concessions
+3. Rent Concessions
+4. Allowance
+5. Abatement Concessions
+6. Rent Credit
+7. Rent Abatement
+8. Tenant Improvement Allowance
+9. Operating Expense Abatement
+
+These are the required concession types for the new Concessions tab.
+
+Do NOT invent, rename, remove, or replace these types unless the existing codebase already has an established enum/value representation that requires mapping.
+
+If the existing database/extraction layer uses different internal values, preserve the existing internal architecture and map them to these display labels.
+
+---
+
+# 2. IMPORTANT BUSINESS CONTEXT
+
+The term "Concession" is being used as a common grouping for different lease-related financial items.
+
+A lease may contain:
+
+- Rent concessions
+- Allowances
+- Abatements
+- Rent credits
+- Rent abatements
+- Tenant Improvement Allowances
+- Operating Expense Abatements
+- Security Deposit
+- Other generic concession entries represented by the "Concessions" type
+
+The system must therefore support **multiple concession records**, rather than storing everything in one fixed field.
+
+Example:
+
+A single lease could contain:
+
+| Type | Amount |
+|------|-------:|
+| Rent Concessions | $10,000 |
+| Rent Credit | $5,000 |
+| Tenant Improvement Allowance | $25,000 |
+| Operating Expense Abatement | $8,000 |
+
+All of these records belong to the same lease but remain separate concession entries.
+
+---
+
+# 3. NEW LEASE TAB
+
+Add a new tab:
+
+**Lease → Concessions**
+
+This must be implemented as **Lease Tab #6**.
+
+The existing Lease tabs must remain unchanged.
+
+Use the existing Lease tab/navigation component and styling rather than creating a completely separate UI pattern.
+
+The new tab should visually match the existing Lease section.
+
+---
+
+# 4. FIRST STEP — INSPECT THE EXISTING CODEBASE
+
+Before writing code, inspect the existing MyLeaseAudit codebase thoroughly.
+
+Identify:
+
+### Lease UI
+
+- Lease page/component
+- Lease tabs component
+- Existing tab numbering/order
+- Existing Lease tab routing
+- Existing tab state/navigation
+- Existing Lease UI components
+- Existing tables/cards/forms
+- Existing Add/Edit/Delete patterns
+
+### Lease backend
+
+- Lease controller
+- Lease service
+- Lease model/entity
+- Lease repository, if applicable
+- Lease API endpoints
+- Lease request/validation classes
+- Existing authorization/policies
+
+### Database
+
+Search for existing tables and columns related to:
+
+- lease
+- concessions
+- concession
+- concession_value
+- rent_credit
+- rent_concession
+- rent_abatement
+- expense_abatement
+- operating_expense_abatement
+- allowance
+- tenant_improvement
+- tenant_improvement_allowance
+- security_deposit
+
+### Extraction
+
+Inspect the existing document extraction/AI extraction structure for concession-related data.
+
+Identify:
+
+- Extraction models
+- Extraction tables
+- JSON structures
+- AI-extracted lease fields
+- Mapping logic
+- Persistence logic
+- Source document references
+- Page/section references
+- Existing premises mapping
+
+### Relationships
+
+Identify how the application currently handles:
+
+- Lease → Premises
+- Lease → Documents
+- Lease → Source references
+- Lease → Extracted data
+- Lease → Audit history
+- Lease → User/tenant/property relationships
+
+Do NOT assume the database structure.
+
+Use the existing codebase as the source of truth before deciding whether a new table or migration is required.
+
+---
+
+# 5. SEARCH TERMS
+
+Search the codebase using at least the following terms:
+
+- concession
+- concessions
+- concession_value
+- rent concession
+- rent_concession
+- rent concessions
+- allowance
+- abatement
+- abatement_concession
+- rent credit
+- rent_credit
+- rent abatement
+- rent_abatement
+- tenant improvement
+- tenant_improvement
+- tenant improvement allowance
+- operating expense abatement
+- operating_expense_abatement
+- security deposit
+- security_deposit
+- premises
+
+Inspect both frontend and backend code.
+
+---
+
+# 6. DATA MODEL REQUIREMENT
+
+The Concessions tab must support **multiple records per lease**.
+
+Do NOT implement this as a single hard-coded concession field.
+
+The structure must support:
+
+- 0 concession records
+- 1 concession record
+- 2 concession records
+- 5+ concession records
+- 10+ concession records
+
+The user must be able to add additional concession records dynamically.
+
+Example:
+
+Lease A:
+
+```text
+Rent Concessions
+$10,000
+
+Rent Credit
+$5,000
+
+Tenant Improvement Allowance
+$50,000
+
+Operating Expense Abatement
+$12,000
+
+
+7. CONCESSIONS UI
+The new tab should primarily use a table/list-based UI.
+Suggested structure:
+Type	Premises	Amount	Source	Actions
+Rent Concessions	Suite 101	$10,000	Lease.pdf	Edit/Delete
+Rent Credit	Suite 102	$5,000	Lease.pdf	Edit/Delete
+Tenant Improvement Allowance	Suite 101	$50,000	Lease.pdf	Edit/Delete
+
+
+Use the existing application table styling and components.
+Do not introduce a completely new visual design if an existing reusable table/form component is available.
+8. ADD CONCESSION
+Provide an action such as:
++ Add Concession
+When clicked, display the existing application's standard form/modal/drawer pattern.
+The form should allow the user to select:
+Concession Type
+Dropdown/select containing exactly these required options:
+1. Security Deposit
+2. Concessions
+3. Rent Concessions
+4. Allowance
+5. Abatement Concessions
+6. Rent Credit
+7. Rent Abatement
+8. Tenant Improvement Allowance
+9. Operating Expense Abatement
+Premises
+Use the existing Lease → Premises relationship.
+Do NOT create duplicate premises records.
+If premises are optional in the existing data model, follow the existing architecture.
+Amount
+Allow the concession amount to be entered.
+Use the existing application's currency/decimal handling.
+Do not store monetary values as formatted strings.
+Description / Details
+If the existing Lease data model supports descriptions/details, reuse that structure.
+Do not add unnecessary fields if the existing architecture does not support them.
+Source / Reference
+Reuse the application's existing document/source/reference mechanism.
+Do NOT invent fake source information.
+If source page/section information exists, display it.
+If it does not exist, do not fabricate page numbers or references.
+9. EDIT CONCESSION
+Each concession record should support editing.
+Use the existing application's standard edit pattern.
+The user should be able to modify:
+- Concession Type
+- Premises
+- Amount
+- Description/details
+- Other existing supported fields
+The update must persist to the database.
+10. DELETE CONCESSION
+Each concession record should support deletion using the existing application's delete pattern.
+Before deleting, use the existing confirmation dialog/modal if one exists.
+Do not implement a custom confirmation UX if an existing reusable component is available.
+Deletion must remove only the selected concession record.
+It must NOT delete:
+- Lease
+- Premises
+- Documents
+- Other concessions
+- Other Lease data
+11. EMPTY STATE
+If the lease has no concession records, show a proper empty state.
+Example:
+No concessions have been added for this lease.
+
+[ + Add Concession ]
+
+Do NOT create fake records with:
+$0
+N/A
+Unknown
+
+The empty state should accurately represent that no concession data exists.
+12. CONCESSION VALUE
+There is an existing field called:
+Concession Value
+This field was originally intended to represent the total dollar amount of all concessions before a dedicated Concessions section existed.
+Inspect how this field is currently stored and used.
+Do NOT remove it blindly.
+If safe and consistent with the existing architecture, the new Concessions records should become the source for calculating the total concession value.
+For example:
+Rent Concessions              $10,000
+Rent Credit                    $5,000
+Tenant Improvement Allowance  $25,000
+Operating Expense Abatement    $8,000
+---------------------------------------
+Total Concession Value        $48,000
+
+However:
+IMPORTANT:
+Do not double-count the same concession.
+If the existing concession_value field already contains a total extracted from the lease, determine how the application currently uses it before changing the behavior.
+Preserve backward compatibility.
+If the safest architecture is to keep the existing field for historical/extracted data and calculate the new UI total from concession records, follow that architecture.
+Document the decision in the implementation summary.
+13. SECURITY DEPOSIT
+"Security Deposit" is one of the required concession types for this implementation.
+However, inspect the existing application architecture before treating Security Deposit as part of the normal concession total.
+The existing business discussion treats Security Deposit somewhat differently from the other concession-related items.
+Therefore:
+- Support Security Deposit as a selectable concession type.
+- Preserve its existing meaning/mapping if already implemented.
+- Do NOT automatically add Security Deposit to the total Concession Value if the existing business logic treats it separately.
+- Do NOT modify existing Security Deposit validation/business logic unless explicitly required for this task.
+If the existing codebase already defines how Security Deposit participates in concession totals, follow the existing implementation.
+14. DYNAMIC RECORDS
+The implementation must NOT be limited to a fixed number of concession fields such as:
+rent_concession_1
+rent_concession_2
+rent_concession_3
+
+Avoid creating multiple hard-coded columns for each concession type.
+Instead, use a normalized/dynamic record structure where appropriate.
+Conceptually:
+Lease
+  |
+  +-- Concession
+  +-- Concession
+  +-- Concession
+  +-- Concession
+
+Each record contains its type and relevant information.
+15. DATABASE IMPLEMENTATION
+Before creating a migration, determine whether the current schema already supports concession records.
+Prefer:
+Reusing an existing concession table/model if one exists.
+Only create a new table if:
+The current schema cannot properly represent multiple concession records.
+If a new table is genuinely required, follow the existing database conventions.
+Conceptually it may contain fields similar to:
+lease_id
+premises_id
+type
+description
+amount
+source/reference
+created_at
+updated_at
+
+IMPORTANT:
+These are conceptual fields only.
+Do NOT blindly create this exact schema.
+First inspect the existing database architecture and reuse existing:
+- Primary key conventions
+- UUID/integer conventions
+- Foreign key conventions
+- Soft delete conventions
+- Audit fields
+- Source/document relationships
+- Premises relationships
+- Naming conventions
+- JSON structures
+- Status fields
+Avoid duplicate data structures.
+16. EXTRACTION INTEGRATION
+Inspect the current document/AI extraction pipeline.
+Determine whether concession-related information is already being extracted.
+The implementation should reuse existing extracted concession data where possible.
+The following types should be mapped correctly when they appear in extracted lease data:
+Security Deposit
+Concessions
+Rent Concessions
+Allowance
+Abatement Concessions
+Rent Credit
+Rent Abatement
+Tenant Improvement Allowance
+Operating Expense Abatement
+
+Do NOT create fake extraction data.
+Do NOT hard-code sample concession records into production code.
+If extracted data already exists in another format, create an appropriate mapping to the new Concessions tab.
+17. SOURCE DOCUMENT / TRACEABILITY
+Every concession should preserve the application's existing source/document traceability wherever available.
+For example:
+Concession
+   ↓
+Lease Document
+   ↓
+Page / Section / Source Reference
+
+Use the existing source architecture.
+Do not invent:
+- Document names
+- Page numbers
+- Section numbers
+- Source references
+If the source information is unavailable, display the appropriate existing empty/unknown state.
+18. PREMISES SUPPORT
+A concession may be associated with a specific premises.
+Use the existing Lease → Premises relationship.
+The UI should allow the user to identify which premises the concession applies to when the existing business/data model supports it.
+Example:
+Type:
+Tenant Improvement Allowance
+
+Premises:
+Suite 101
+
+Amount:
+$25,000
+
+Do not create a separate premises master or duplicate premises information.
+19. BACKEND/API REQUIREMENTS
+Implement the required backend functionality according to the existing architecture.
+Potential operations:
+List
+Retrieve concessions for the selected lease.
+Create
+Create a new concession record.
+Update
+Update an existing concession record.
+Delete
+Delete a specific concession record.
+Total
+Calculate/display the total concession value if required by the existing architecture.
+Use:
+- Existing controllers
+- Existing services
+- Existing repositories
+- Existing request validation
+- Existing API response format
+- Existing authorization
+- Existing error handling
+Do not introduce a new backend architecture for this feature.
+20. VALIDATION
+Apply appropriate validation using the application's existing validation conventions.
+At minimum, validate:
+Type
+Must be one of the supported concession types.
+Amount
+Must use the application's existing monetary validation rules.
+Lease
+Must reference a valid lease.
+Premises
+If required by the existing schema, must reference a valid premises record belonging to the lease.
+Do not allow a concession record to reference a premises belonging to another lease.
+21. PERMISSIONS / AUTHORIZATION
+Reuse the existing Lease permissions.
+Do not create a completely new permission system.
+Check how the application currently handles:
+- Lease view permission
+- Lease edit permission
+- Lease create permission
+- Lease delete permission
+The Concessions tab should follow the same authorization rules.
+Users who can edit the Lease should be able to add/edit concessions according to the existing permission model.
+Users without edit permission should not be able to modify concession records.
+22. AUDIT / HISTORY
+Inspect whether Lease changes are tracked through:
+- Audit logs
+- Activity logs
+- History tables
+- Change tracking
+If the existing architecture automatically tracks Lease-related changes, ensure Concession changes participate in that mechanism.
+Do not introduce a separate audit framework.
+23. UI BEHAVIOR
+The Concessions tab should support:
+View concessions
+        ↓
++ Add Concession
+        ↓
+Select Type
+        ↓
+Select Premises
+        ↓
+Enter Amount
+        ↓
+Add Source/Details if supported
+        ↓
+Save
+        ↓
+Record appears in table
+
+Users should also be able to:
+Edit
+Delete
+Add another
+
+The interface must remain usable when a lease contains many concession records.
+24. TOTAL CONCESSION VALUE
+If the UI displays a total:
+Total Concession Value
+$XX,XXX.XX
+
+Calculate it from the appropriate concession records according to the existing business rules.
+Be careful with:
+- Security Deposit
+- Duplicate extracted values
+- Existing concession_value
+- Multiple records
+- Edited records
+- Deleted records
+Do not double-count.
+25. RESPONSIVE / EXISTING UI STYLE
+Follow the existing MyLeaseAudit design system.
+Reuse:
+- Existing buttons
+- Existing modals
+- Existing drawers
+- Existing forms
+- Existing dropdowns
+- Existing tables
+- Existing validation messages
+- Existing toast/notification system
+- Existing loading states
+- Existing empty states
+Do not introduce a completely new UI framework.
+26. NO UNRELATED CHANGES
+This implementation must remain scoped to the Lease Concessions functionality.
+Do NOT modify unrelated modules such as:
+- PES
+- TRS
+- CAM
+- Expense Matrix
+- Cap Calculations
+- Validation Results
+- Savings
+- Observation
+- Statement Validation
+- Audit Workflow
+- Base Rent Validation
+- Rent Escalation Validation
+- Security Deposit Validation logic
+- Existing Lease tabs
+- Existing user roles
+- Existing permission architecture
+Only make changes required to support the new Concessions tab and its integration.
+27. TESTING
+Add/update tests according to the existing project testing architecture.
+Test at minimum:
+Lease without concessions
+Lease → Concessions
+No records
+Empty state displayed
+
+Single concession
+Rent Credit
+$5,000
+
+Multiple concessions
+Rent Concessions
+$10,000
+
+Rent Credit
+$5,000
+
+Tenant Improvement Allowance
+$25,000
+
+Operating Expense Abatement
+$8,000
+
+Verify all records appear correctly.
+Add
+Verify a new concession can be created.
+Edit
+Verify a concession can be updated.
+Delete
+Verify only the selected concession is deleted.
+Type validation
+Verify unsupported concession types cannot be stored.
+Premises validation
+Verify a concession cannot reference a premises belonging to another lease.
+Total
+Verify the concession total is calculated correctly according to the existing business rules.
+Security Deposit
+Verify Security Deposit follows the existing business logic and is not incorrectly double-counted.
+Existing Lease functionality
+Verify all existing Lease tabs continue working.
+28. MIGRATION SAFETY
+If a database migration is required:
+- Make it backward compatible.
+- Follow existing migration conventions.
+- Add appropriate foreign keys.
+- Add appropriate indexes.
+- Add appropriate delete/update behavior.
+- Do not modify existing data unnecessarily.
+- Do not remove existing concession fields without confirming they are no longer needed.
+- Preserve existing extracted data.
+Before creating a migration, confirm that an existing concession structure cannot be reused.
+29. ACCEPTANCE CRITERIA
+The implementation is complete only when all of the following are true:
+- [ ] New Lease tab called Concessions exists.
+- [ ] Concessions is Lease Tab #6.
+- [ ] Existing Lease tabs remain unchanged.
+- [ ] The tab supports multiple concession records.
+- [ ] The following 9 types are available:
+  1. Security Deposit
+  2. Concessions
+  3. Rent Concessions
+  4. Allowance
+  5. Abatement Concessions
+  6. Rent Credit
+  7. Rent Abatement
+  8. Tenant Improvement Allowance
+  9. Operating Expense Abatement
+- [ ] User can add a concession.
+- [ ] User can edit a concession.
+- [ ] User can delete a concession.
+- [ ] User can associate a concession with the correct premises where applicable.
+- [ ] Amount is stored correctly as a monetary value.
+- [ ] Existing source/document references are preserved.
+- [ ] Existing extraction data is reused where available.
+- [ ] No fake/demo concession records are introduced.
+- [ ] Empty state works correctly.
+- [ ] Existing Concession Value behavior is preserved or safely integrated.
+- [ ] No concession is double-counted.
+- [ ] Security Deposit is handled according to existing business rules.
+- [ ] Existing Lease permissions are respected.
+- [ ] Existing audit/history mechanisms are respected.
+- [ ] Existing Lease functionality continues to work.
+- [ ] Tests pass.
+- [ ] No unrelated Validation functionality is changed.
+30. IMPLEMENTATION ORDER
+Follow this order:
+Step 1
+Inspect the existing Lease page and tab structure.
+Step 2
+Identify where Lease Tab #6 should be added.
+Step 3
+Inspect the Lease model/database structure.
+Step 4
+Search all existing concession-related fields/tables/models.
+Step 5
+Inspect the existing extraction/AI mapping for concession data.
+Step 6
+Inspect the existing premises relationship.
+Step 7
+Inspect existing source/document reference handling.
+Step 8
+Inspect the existing Concession Value field and determine exactly how it is currently used.
+Step 9
+Determine whether an existing concession table/model can be reused.
+Step 10
+Only if necessary, create a database migration for a normalized concession structure.
+Step 11
+Implement backend list/create/update/delete functionality.
+Step 12
+Implement Lease → Concessions Tab #6.
+Step 13
+Implement the concession table/list.
+Step 14
+Implement Add Concession.
+Step 15
+Implement Edit Concession.
+Step 16
+Implement Delete Concession.
+Step 17
+Implement premises/source display.
+Step 18
+Implement the appropriate concession total.
+Step 19
+Integrate existing extraction data.
+Step 20
+Add/update tests.
+Step 21
+Run the complete relevant test suite.
+Step 22
+Verify existing Lease tabs and functionality have not been affected.
+31. IMPORTANT — DO NOT MAKE ASSUMPTIONS
+Before implementing the feature, inspect the existing codebase and determine:
+1. Where the Lease tabs are implemented.
+2. Which component should contain the new Concessions tab.
+3. How Lease data is stored.
+4. Whether a concession table/model already exists.
+5. Whether concession_value already exists.
+6. How concession-related extracted fields are currently stored.
+7. How premises are related to a lease.
+8. How source/document references are stored.
+9. How Lease permissions work.
+10. How Lease audit/history works.
+11. Whether a database migration is actually necessary.
+12. Whether existing concession data can be migrated/mapped into the new structure.
+Do NOT create duplicate tables, models, fields, APIs, or relationships if equivalent functionality already exists.
